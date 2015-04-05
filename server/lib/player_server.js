@@ -5,25 +5,33 @@ var util = require('util');
 
 
 function PlayerServer() {
+	var self = this;
     this.server = net.createServer(function(player) {
-        //TODO
+    	player.on('data', function(data) {
+    		 self.onInput(player, data.toString());
+        });
     });
 }
 util.inherits(PlayerServer, events.EventEmitter);
 
 
 PlayerServer.prototype.onInput = function(player, data) {
-    //TODO
+	var obj = JSON.parse(data);
+	 if(obj.type == 'REGISTER'){
+		 this.emit('register', player, obj.student_id);
+	 }else if(obj.type == 'MOVE'){
+		 this.emit('move', player, obj);
+	 }
 }
 
 
 PlayerServer.prototype.listen = function(port) {
-    //TODO
+	this.server.listen(port);
 }
 
 
 PlayerServer.prototype.close = function() {
-    //TODO
+    this.server.close();
 }
 
 

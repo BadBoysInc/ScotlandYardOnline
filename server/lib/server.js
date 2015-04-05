@@ -10,7 +10,8 @@ var GameServer   = require('./game_server.js');
 function Server() {
     this.game_id = -1;
     this.colours = [];
-
+    this.game_server = new GameServer();
+    this.player_server = new PlayerServer();
     //TODO
 }
 
@@ -23,8 +24,14 @@ function Server() {
  * @param game_port
  */
 Server.prototype.start = function(player_port, game_port) {
-    //TODO
+	var self = this;
+	this.game_server.listen(game_port);
+	this.player_server.listen(player_port);
+	this.game_server.on('initialised', function(incoming_game_id){
+		self.game_id = incoming_game_id;
+	});
 }
+
 
 
 /**
