@@ -9,7 +9,7 @@ var GameServer   = require('./game_server.js');
  */
 function Server() {
     this.game_id = -1;
-    this.colours = [];
+    this.colours = ['Black', 'Blue', 'Green', 'Red', 'White', 'Yellow'];
     this.game_server = new GameServer();
     this.player_server = new PlayerServer();
     //TODO
@@ -30,6 +30,13 @@ Server.prototype.start = function(player_port, game_port) {
 	this.game_server.on('initialised', function(incoming_game_id){
 		self.game_id = incoming_game_id;
 	});
+  this.player_server.on('register', function(player){
+    var colour = self.getNextColour();
+    self.game_server.addPlayer(player, colour, self.game_id);
+  });
+  this.player_server.on('move', function(player, obj){
+    self.game_server.makeMove(player, obj); 
+  });
 }
 
 
@@ -38,7 +45,8 @@ Server.prototype.start = function(player_port, game_port) {
  * Function to close down the player server and the game server
  */
 Server.prototype.close = function() {
-    //TODO
+  this.game_server.close();
+  this.player_server.close();
 }
 
 
@@ -47,7 +55,7 @@ Server.prototype.close = function() {
  * @returns {number|*}
  */
 Server.prototype.gameId = function() {
-    //TODO
+    return this.game_id;
 }
 
 
@@ -57,9 +65,10 @@ Server.prototype.gameId = function() {
  * @returns {*}
  */
 Server.prototype.getNextColour = function() {
-    //TODO
+    var colour = this.colours[0];
+    this.colours.splice(0,1);
+    return colour;
 }
 
 
 module.exports = Server;
-

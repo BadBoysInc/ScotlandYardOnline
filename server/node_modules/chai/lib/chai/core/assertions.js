@@ -75,6 +75,12 @@ module.exports = function (chai, _) {
    *     expect({ foo: { bar: { baz: 'quux' } } })
    *       .to.have.deep.property('foo.bar.baz', 'quux');
    *
+   * `.deep.property` special characters can be escaped
+   * by adding two slashes before the `.` or `[]`.
+   *
+   *     var deepCss = { '.link': { '[target]': 42 }};
+   *     expect(deepCss).to.have.deep.property('\\.link.\\[target\\]', 42);
+   *
    * @name deep
    * @api public
    */
@@ -761,7 +767,7 @@ module.exports = function (chai, _) {
    *         green: { tea: 'matcha' }
    *       , teas: [ 'chai', 'matcha', { tea: 'konacha' } ]
    *     };
-
+   * 
    *     expect(deepObj).to.have.deep.property('green.tea', 'matcha');
    *     expect(deepObj).to.have.deep.property('teas[1]', 'matcha');
    *     expect(deepObj).to.have.deep.property('teas[2].tea', 'konacha');
@@ -792,6 +798,18 @@ module.exports = function (chai, _) {
    *       .that.is.an('array')
    *       .with.deep.property('[2]')
    *         .that.deep.equals({ tea: 'konacha' });
+   *
+   * Note that dots and bracket in `name` must be backslash-escaped when
+   * the `deep` flag is set, while they must NOT be escaped when the `deep`
+   * flag is not set.
+   *
+   *     // simple referencing
+   *     var css = { '.link[target]': 42 };
+   *     expect(css).to.have.property('.link[target]', 42);
+   *
+   *     // deep referencing
+   *     var deepCss = { '.link': { '[target]': 42 }};
+   *     expect(deepCss).to.have.deep.property('\\.link.\\[target\\]', 42);
    *
    * @name property
    * @alias deep.property
