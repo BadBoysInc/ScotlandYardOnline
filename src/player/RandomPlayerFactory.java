@@ -56,7 +56,7 @@ public class RandomPlayerFactory implements PlayerFactory {
     public Player player(Colour colour, ScotlandYardView view, String mapFilename) {
         switch (typeMap.get(colour)) {
             case AI:
-                return new RandomPlayer(view, mapFilename);
+                return new ScoringRandomPlayer(view, mapFilename);
             case GUI:
                 return gui(view);
             default:
