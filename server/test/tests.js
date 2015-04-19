@@ -55,17 +55,24 @@ describe('Player Server', function() {
             });
         });
 
-        it('Should have the id of the student as the data' , function(done) {
+        it('Both the player and the id of the student should be emitted' , function(done) {
             var id = '234mc';
             player_server.listen(8124);
+
+            var player_test = null;
+            player_server.server.on('connection', function(connected_client) {
+                player_test = connected_client;
+            });
+
             var client = net.createConnection(8124, function() {
                 client.on('error', function() {});
                 var data = {type:'REGISTER', student_id:id};
                 client.write(JSON.stringify(data));
             });
 
-            player_server.on('register', function(client, sent_id) {
+            player_server.on('register', function(player, sent_id) {
                 expect(sent_id).to.be.equal(id);
+                expect(player).to.be.equal(player_test);
                 done();
             });
         });
@@ -93,7 +100,7 @@ describe('Player Server', function() {
         });
 
 
-        it('Should pass the move as an argument to the event emission', function(done) {
+        it('Both the player and the move should be emitted', function(done) {
             var move = {
                 type: 'MOVE',
                 move : {
@@ -105,6 +112,11 @@ describe('Player Server', function() {
 
             player_server.listen(8124);
 
+            var player_test = null;
+            player_server.server.on('connection', function(connected_client) {
+                player_test = connected_client;
+            });
+
             var client = net.connect(8124, function() {
                 client.on('error', function() {});
                 client.write(JSON.stringify(move));
@@ -114,6 +126,7 @@ describe('Player Server', function() {
                 expect(incoming_move.move.target).to.be.equal(move.move.target);
                 expect(incoming_move.move.ticket).to.be.equal(move.move.ticket);
                 expect(incoming_move.move.colour).to.be.equal(move.move.colour);
+                expect(player).to.be.equal(player_test);
                 done();
             });
         });
