@@ -183,7 +183,7 @@ public class ScoringRandomPlayer extends RandomPlayer {
 	@Override
     public Move notify(int location, Set<Move> moves) {
         //TODO: Some clever AI here ...
-		System.out.println("Total Distance of Detectives: " + score(location, moves));
+		System.out.println("--------------Score: " + score(location, moves));
 		return super.notify(location, moves);
     }
 	

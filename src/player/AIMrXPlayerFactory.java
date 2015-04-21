@@ -19,10 +19,10 @@ import java.util.Map;
  * a random AI to each of the colours except Blue, which
  * is controlled by the GUI.
  */
-public class RandomPlayerFactory implements PlayerFactory {
+public class AIMrXPlayerFactory implements PlayerFactory {
     protected Map<Colour, PlayerType> typeMap;
 
-    public enum PlayerType {ScoringAI, AI, GUI}
+    public enum PlayerType {AI, Random, GUI}
 
     String imageFilename;
     String positionsFilename;
@@ -30,14 +30,14 @@ public class RandomPlayerFactory implements PlayerFactory {
     protected List<Spectator> spectators;
     Gui gui;
 
-    public RandomPlayerFactory() {
+    public AIMrXPlayerFactory() {
         typeMap = new HashMap<Colour, PlayerType>();
-        typeMap.put(Colour.Black, RandomPlayerFactory.PlayerType.ScoringAI);
-        typeMap.put(Colour.Blue, RandomPlayerFactory.PlayerType.GUI);
-        typeMap.put(Colour.Green, RandomPlayerFactory.PlayerType.AI);
-        typeMap.put(Colour.Red, RandomPlayerFactory.PlayerType.AI);
-        typeMap.put(Colour.White, RandomPlayerFactory.PlayerType.AI);
-        typeMap.put(Colour.Yellow, RandomPlayerFactory.PlayerType.AI);
+        typeMap.put(Colour.Black, AIMrXPlayerFactory.PlayerType.AI);
+        typeMap.put(Colour.Blue, AIMrXPlayerFactory.PlayerType.GUI);
+        typeMap.put(Colour.Green, AIMrXPlayerFactory.PlayerType.GUI);
+        typeMap.put(Colour.Red, AIMrXPlayerFactory.PlayerType.Random);
+        typeMap.put(Colour.White, AIMrXPlayerFactory.PlayerType.Random);
+        typeMap.put(Colour.Yellow, AIMrXPlayerFactory.PlayerType.Random);
 
         positionsFilename = "resources/pos.txt";
         imageFilename     = "resources/map.jpg";
@@ -45,7 +45,7 @@ public class RandomPlayerFactory implements PlayerFactory {
         spectators = new ArrayList<Spectator>();
     }
 
-    public RandomPlayerFactory(Map<Colour, PlayerType> typeMap, String imageFilename, String positionsFilename) {
+    public AIMrXPlayerFactory(Map<Colour, PlayerType> typeMap, String imageFilename, String positionsFilename) {
         this.typeMap = typeMap;
         this.imageFilename = imageFilename;
         this.positionsFilename = positionsFilename;
@@ -56,9 +56,9 @@ public class RandomPlayerFactory implements PlayerFactory {
     public Player player(Colour colour, ScotlandYardView view, String mapFilename) {
         switch (typeMap.get(colour)) {
             case AI:
+                return new MyAIPlayer(view, mapFilename);
+            case Random:
                 return new RandomPlayer(view, mapFilename);
-            case ScoringAI:
-                return new ScoringRandomPlayer(view, mapFilename);
             case GUI:
                 return gui(view);
             default:
