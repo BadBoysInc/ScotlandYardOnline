@@ -29,9 +29,11 @@ public class ScoringRandomPlayer extends RandomPlayer {
 	}
 	
 	/**
-	 * @return int of total distance from Mr X to detectives.
+	 * @param Mr X's location 
+	 * @param His valid moves 
+	 * @return Integer score of board, from distance to detectives and number of possible moves.
 	 */
-	private int score(){
+	private int score(int location, Set<Move> moves){
 		
 		//getting locations of players
 		ArrayList<Integer> detectives = new ArrayList<Integer>();
@@ -45,30 +47,48 @@ public class ScoringRandomPlayer extends RandomPlayer {
 			}
 		}
 		
-		//if don't know where Mr X is distance is 0
-		int totalDistanceToDetectives;
-		if(mrX != 0){
-			totalDistanceToDetectives = doSelectiveDijkstra(mrX, detectives, this.graphFilename);
-		}else{
-			totalDistanceToDetectives = 0;
+		if(view.getCurrentPlayer() == Colour.Black){
+			mrX = location;
 		}
-		return totalDistanceToDetectives;
 		
+		ScotlandYardGraphReader reader = new ScotlandYardGraphReader();
+
+		try {
+			Graph graph = reader.readGraph(graphFilename);
+			
+			int totalDistanceToDetectives;
+			if(mrX != 0){
+				totalDistanceToDetectives = doSelectiveNOTDijkstra(mrX, detectives, graph);
+			}else{
+				totalDistanceToDetectives = 0;
+			}
+			
+			int MrXcurrentOptions = moves.size();
+			
+			//Scaling factors
+			int a = 1;
+			int b = 1;
+			
+			return (a*totalDistanceToDetectives + b*MrXcurrentOptions);
+			
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		return 0;
 		
 	}
 	
+	
+
 	/**
 	 * @param mrX location
 	 * @param detectives locations
-	 * @param graphFilename 
+	 * @param graph 
 	 * @return total distance from Mr X to detectives.
 	 */
-	private int doSelectiveDijkstra(Integer mrX, ArrayList<Integer> detectives,	String graphFilename) {
-		
-		//read in graph from file
-		ScotlandYardGraphReader reader = new ScotlandYardGraphReader();
-		try {
-			Graph graph = reader.readGraph(graphFilename);
+	private int doSelectiveNOTDijkstra(Integer mrX, ArrayList<Integer> detectives,	Graph graph) {
+				
 			Set<Edge> edges = graph.getEdges();
 			Set<Node> nodes = graph.getNodes();
 			
@@ -121,17 +141,9 @@ public class ScoringRandomPlayer extends RandomPlayer {
 				sum += detectiveDistances.get(i);
 			}
 			return sum;
-			
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
-		return 0;
 	}
 
 	/**
-	 * 
 	 * @param Set of currentNodes
 	 * @param Set of all not-reached nodes
 	 * @param Set of all edges
@@ -153,10 +165,8 @@ public class ScoringRandomPlayer extends RandomPlayer {
 		}
 		return neighbours;
 	}
-
 	
 	/**
-	 * 
 	 * @param Int location
 	 * @param Set of nodes
 	 * @return Node from set with matching data, null if none match.
@@ -173,7 +183,7 @@ public class ScoringRandomPlayer extends RandomPlayer {
 	@Override
     public Move notify(int location, Set<Move> moves) {
         //TODO: Some clever AI here ...
-		System.out.println("Total Distance of Detectives: " + score());
+		System.out.println("Total Distance of Detectives: " + score(location, moves));
 		return super.notify(location, moves);
     }
 	
