@@ -62,7 +62,6 @@ public class MyAIPlayer implements Player{
 				
 	}
 	
-	
 	/**
 	 * @param Mr X's location 
 	 * @param His valid moves 
@@ -73,6 +72,7 @@ public class MyAIPlayer implements Player{
 		//getting location
 		Integer mrX = location;
 		
+		
 		//getting distance to detectives
 		int totalDistanceToDetectives;
 		if(mrX != 0){
@@ -80,15 +80,62 @@ public class MyAIPlayer implements Player{
 		}else{
 			totalDistanceToDetectives = 0;
 		}
+		//\\//\\//\\//\\//NEED TO LOOK AT MIN DISTANCE SO IT DOESNT WALK TOWARDS ONE DETECTIVE//\\//\\//\\//\\
 		
 		//getting number of valid moves
 		int MrXcurrentOptions = validMoves(mrX, detectives, graph.getNodes(), graph.getEdges(), MrXTickets).size();
 		
-		//Scaling factors
-		int a = 1;
-		int b = 1;
+		//number of modes of transport available
+		//is in a corner? mabye? possibly?
+		//possible positions
 		
-		return (a*totalDistanceToDetectives + b*MrXcurrentOptions);
+		/*
+		 * Taken from a ScotlandYard Strategy Guide
+		 * 
+The strategy here is all about concealment. Your goal is to make the detectives believe that you could be in a large number of possible locations, too many for them to guard adequately.
+
+1. Surface in highly connected locations
+If Mr. X surfaces on a well-connected location, then there are many places where he could be located on the following turn. As the detectives attempt to narrow in on your position, they will find that it is difficult to close in the perimeter tightly without offering you an escape route.
+
+A location with all three transportation methods is also a great place to use a black ticket, greatly increasing the number of locations where you may be hiding.
+
+2. Avoid undergrounds
+Undergrounds should be used only when they offer Mr. X an opportunity to move a significant distance from the detectives. In any other situation, the use of an underground ticket only serves to limit the number of possible locations where Mr. X could lie.
+
+3. Taxis are good
+A taxi can be as good as a black ticket in many situations. Taxi routes go everywhere, so using many taxi tickets can greatly increase the number of locations where you could be hiding.
+
+On the other hand, using too many taxis will restrict you to a relatively small area of the board. So don't rely on them completely.
+
+4. Plausible alternate routes
+Bluff whenever possible. Make the detectives believe you are taking the "obvious" route, when in reality you are going by the back door. In practice, this means selecting your tickets carefully. While your "back door" route may let you move with a bus, the "obvious" route may not... so move using tickets that are consistent with the "obvious" route.
+
+5. Double move across surfacing locations
+Every time your location is revealed, your set of possible locations reduces to a single point, and the detectives are given an opportunity to narrow their containment circle. You can mitigate this effect by double-moving across the surfacing locations: take the first half of the move, surface, then take the second half of the move. If it would serve to further confuse the detectives, consider adding a black ticket for the second leg of the journey.
+
+6. Keep your distance
+You are safe when you move to locations that are at least two jumps away from each of the detectives. Stick to the safe locations unless you have a good reason to do otherwise.
+
+7. Take a risk
+If the detectives play well, they will usually close in tightly on Mr. X about three times during the course of a game. You have two double move tickets that can help you to escape twice. How do you escape the third time? Take a risk. In my experience, a successful Mr. X makes exactly one very risky move through the course of a game. Look for an opportunity to slip within one move of a detective if it will set you up to escape to open territory. If you get lucky and are not captured, the detectives will be clustered together in a poor position to regroup.
+
+8. Count tickets
+In the last eight or so turns of the game, the detectives may begin running low on some tickets. Use this to your advantage. A detective who runs out of taxi tickets can only move on bus stops, and that may leave a big fat hole for you to escape through.
+
+9. Psychology is important
+Be unpredictable. Use a double move to double back on your original location. Use a black ticket to conceal something as innocuous as a taxi trip. Bluff an escape down the river, and instead head into more dangerous territory. Even if you get caught, you earn a reputation as a gutsy criminal... and might have an easier game next time.
+
+10. Learn the map
+There are some spots on the map that are simply bad news. Most notorious must be the area around the Regent's Park in the top left, which has some really poorly connected locations. The lower left can be troublesome as well, because the Kensington Gardens/Hyde Park area can make it difficult for Mr. X to escape the area. It's okay to pass through these regions, but try to avoid getting cornered there or you could have a tough game.
+
+		 */
+		
+		
+		//Scaling factors
+		int distanceFromDetectivesScale = 1;
+		int currentOptionsScale = 1;
+		
+		return (distanceFromDetectivesScale*totalDistanceToDetectives + currentOptionsScale*MrXcurrentOptions);
 		
 	}
 
@@ -266,8 +313,5 @@ public class MyAIPlayer implements Player{
     	
     	return moves;
     }
-
-	
-	
 
 }
