@@ -7,6 +7,7 @@ import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import scotlandyard.Colour;
@@ -31,8 +32,8 @@ public class MyAIPlayer implements Player{
 	String graphFilename;
 	Graph graph;
 	Set<Integer> detectives;
-	HashMap<Ticket, Integer> MrXTickets;
-	HashMap<Integer, HashMap<Ticket, Integer>> DetectiveTickets;
+	HashMap<Colour, HashMap<Ticket, Integer>> Tickets;
+	HashMap<Colour, Integer> Locations;
 	boolean DEBUG = false;
 	GraphDisplay graphDisplay;
 	
@@ -50,14 +51,17 @@ public class MyAIPlayer implements Player{
 		for(Colour player: this.view.getPlayers()){
 			if(player != Colour.Black){
 				detectives.add(this.view.getPlayerLocation(player));
+				Locations.put(player, view.getPlayerLocation(player));
 			}
 		}
 		
-		//getting MrX's tickets
-		MrXTickets = new HashMap<Ticket, Integer>();
-		
-		for(Ticket t: Ticket.values()){
-			MrXTickets.put(t, view.getPlayerTickets(Colour.Black, t));
+		//getting all tickets
+		for(Colour c: view.getPlayers()){
+			HashMap<Ticket, Integer> playerTickets = new HashMap<Ticket, Integer>();
+			for(Ticket t: Ticket.values()){
+				playerTickets.put(t, view.getPlayerTickets(c, t));
+			}
+			Tickets.put(c, playerTickets);
 		}
 		
 		//reading in graph
@@ -73,14 +77,14 @@ public class MyAIPlayer implements Player{
 	 * @param His valid moves 
 	 * @return Integer score of board, from distance to detectives and number of possible moves.
 	 */
-	private int score(int location){
+	private int score(int location, Set<Integer> detectives, Set<Node> nodes, Set<Edge> edges, HashMap<Colour, HashMap<Ticket, Integer>> tickets){
 		
 		//getting location
 		Integer mrX = location;
 		
 		//getting distance to detectives
 		int totalDistanceToDetectives = 0;
-		Hashtable<Integer, Integer> detectiveDistances = breathfirstNodeSearch(mrX, detectives, graph);
+		Hashtable<Integer, Integer> detectiveDistances = breathfirstNodeSearch(mrX, detectives, nodes, edges);
 		if(detectiveDistances != null){
 			for(Integer i: detectiveDistances.keySet()){
 				totalDistanceToDetectives += detectiveDistances.get(i);
@@ -99,7 +103,7 @@ public class MyAIPlayer implements Player{
 		
 		
 		//getting number of valid moves
-		int MrXcurrentOptions = validMoves(mrX, detectives, graph.getNodes(), graph.getEdges(), MrXTickets).size();
+		int MrXcurrentOptions = validMoves(Locations, Colour.Black, nodes, edges, tickets).size();
 		
 		
 		
@@ -131,10 +135,10 @@ public class MyAIPlayer implements Player{
 	 * @param graph 
 	 * @return total distance from Mr X to detectives.
 	 */
-	private Hashtable<Integer, Integer>  breathfirstNodeSearch(Integer mrX, Set<Integer> d,	Graph graph) {
+	private Hashtable<Integer, Integer>  breathfirstNodeSearch(Integer mrX, Set<Integer> d, Set<Node> nodesO, Set<Edge> edgesO) {
 			
-			Set<Edge> edges = new HashSet<Edge>(graph.getEdges());
-			Set<Node> nodes = new HashSet<Node>(graph.getNodes());
+			Set<Edge> edges = new HashSet<Edge>(edgesO);
+			Set<Node> nodes = new HashSet<Node>(nodesO);
 			Set<Integer> detectives = new HashSet<Integer>(d);
 			
 			
@@ -223,17 +227,146 @@ public class MyAIPlayer implements Player{
 	}
 
 	private Move MinMaxTree(int location, Set<Move> moves){
-		for(Move move: moves){
-			Iterator detectivesIt = detectives.iterator();
-			int detective;
-			if(detectivesIt.hasNext()){
-				detective = (Integer) detectivesIt.next();
+		
+		HashMap<Colour, Integer> mrxlocations = new HashMap<Colour, Integer>(Locations);
+		HashMap<Colour, HashMap<Ticket, Integer>> mrxtickets = new HashMap<Colour, HashMap<Ticket, Integer>>(Tickets);
+		HashMap<Move, Integer> MrXList = new HashMap<Move, Integer>();
+		
+		Set<Node> nodes = graph.getNodes();
+		Set<Edge> edges = graph.getEdges();
+		
+		for(Move MrXMove: validMoves(mrxlocations, Colour.Black, nodes, edges, mrxtickets)){
+			int target = 0;
+			if(MrXMove instanceof MoveDouble){
+				target = ((MoveDouble) MrXMove).move2.target;
+				HashMap<Ticket, Integer> tmptickets = mrxtickets.get(Colour.Black);
+				tmptickets.put(((MoveDouble) MrXMove).move2.ticket, tmptickets.get(((MoveDouble) MrXMove).move2.target)-1);
+				tmptickets.put(((MoveDouble) MrXMove).move1.ticket, tmptickets.get(((MoveDouble) MrXMove).move1.target)-1);
+			}else{
+				target = ((MoveTicket) MrXMove).target;
+				HashMap<Ticket, Integer> tmptickets = mrxtickets.get(Colour.Black);
+				tmptickets.put(((MoveTicket) MrXMove).ticket, tmptickets.get(((MoveTicket) MrXMove).target)-1);
 			}
-			validMoves(location, detectives, graph.getNodes(), graph.getEdges(), /*do something here*/new HashMap<Ticket, Integer>());
+			mrxlocations.put(Colour.Black, target);
 			
+			MrXList.put(MrXMove, minMaxCalc(1, mrxlocations, mrxtickets, nodes, edges));
 		}
+		
+		int bestScore = 0;
+		Move bestMove = null;
+		
+		for(Move m: MrXList.keySet()){
+			int score = MrXList.get(m);
+			if(score>bestScore){
+				bestScore = score;
+				bestMove = m;
+			}
+		}
+		
+		return bestMove;
+		
 	}
 	
+	private int minMaxCalc(int level, HashMap<Colour, Integer> locations, HashMap<Colour, HashMap<Ticket, Integer>> tickets, Set<Node> nodes, Set<Edge> edges){
+		if(level == 0){
+			int mrX = 0;
+			Set<Integer> d = new HashSet<Integer>();
+			for(Colour c: locations.keySet()){
+				if(c.equals(Colour.Black)){
+					mrX = locations.get(c);
+				}else{
+					d.add(locations.get(c));
+				}	
+			}
+			return score(mrX, d, nodes, edges, tickets);
+		}
+		
+			
+			Set d1 = new HashSet<Integer>();
+			for(Move d1Move: validMoves(locations, Colour.Blue, nodes, edges, tickets)){
+				HashMap<Ticket, Integer> tmptickets = tickets.get(Colour.Blue);
+				tmptickets.put(((MoveTicket) d1Move).ticket, tmptickets.get(((MoveTicket) d1Move).target)-1);
+				locations.put(Colour.Blue, ((MoveTicket) d1Move).target);
+				Set d2 = new HashSet<Integer>();
+				for(Move d2Move: validMoves(locations, Colour.Green, nodes, edges, tickets)){
+					tmptickets = tickets.get(Colour.Green);
+					tmptickets.put(((MoveTicket) d2Move).ticket, tmptickets.get(((MoveTicket) d2Move).target)-1);
+					locations.put(Colour.Green, ((MoveTicket) d2Move).target);
+					Set d3 = new HashSet<Integer>();
+					for(Move d3Move: validMoves(locations, Colour.Red, nodes, edges, tickets)){
+						tmptickets = tickets.get(Colour.Red);
+						tmptickets.put(((MoveTicket) d3Move).ticket, tmptickets.get(((MoveTicket) d3Move).target)-1);
+						locations.put(Colour.Red, ((MoveTicket) d3Move).target);
+						Set d4 = new HashSet<Integer>();
+						for(Move d4Move: validMoves(locations, Colour.White, nodes, edges, tickets)){
+							tmptickets = tickets.get(Colour.White);
+							tmptickets.put(((MoveTicket) d4Move).ticket, tmptickets.get(((MoveTicket) d4Move).target)-1);
+							locations.put(Colour.White, ((MoveTicket) d4Move).target);
+							Set d5 = new HashSet<Integer>();
+							for(Move d5Move: validMoves(locations, Colour.Yellow, nodes, edges, tickets)){
+								tmptickets = tickets.get(Colour.Yellow);
+								tmptickets.put(((MoveTicket) d5Move).ticket, tmptickets.get(((MoveTicket) d5Move).target)-1);
+								locations.put(Colour.Yellow, ((MoveTicket) d5Move).target);
+								
+								Set Mrx = new HashSet<Integer>();
+								for(Move MrXMove: validMoves(locations, Colour.Black, nodes, edges, tickets)){
+									
+									int target = 0;
+									if(MrXMove instanceof MoveDouble){
+										target = ((MoveDouble) MrXMove).move2.target;
+										tmptickets = tickets.get(Colour.Black);
+										tmptickets.put(((MoveDouble) MrXMove).move2.ticket, tmptickets.get(((MoveDouble) MrXMove).move2.target)-1);
+										tmptickets.put(((MoveDouble) MrXMove).move1.ticket, tmptickets.get(((MoveDouble) MrXMove).move1.target)-1);
+									}else{
+										target = ((MoveTicket) MrXMove).target;
+										tmptickets = tickets.get(Colour.Black);
+										tmptickets.put(((MoveTicket) MrXMove).ticket, tmptickets.get(((MoveTicket) MrXMove).target)-1);
+									}
+									locations.put(Colour.Black, target);
+									
+									Mrx.add(minMaxCalc(level-1,locations,tickets,nodes, edges));
+								}
+								d5.add(max(Mrx));
+							}
+							d4.add(min(d5));
+						}
+						d3.add(min(d4));
+					}
+					d2.add(min(d3));
+				}
+				d1.add(min(d2));
+			}
+			
+		return min(d1);
+		
+	}
+	
+	private int max(Set<Integer> set) {
+		
+		int max = 0;
+		
+		for(Integer i: set){
+			if(i > max){
+				max = i;
+			}
+		}
+		
+		return max;
+	}
+
+	private int min(Set<Integer> set) {
+		
+		int min = Integer.MAX_VALUE;
+		
+		for(Integer i: set){
+			if(i < min){
+				min = i;
+			}
+		}
+		
+		return min;
+	}
+
 	@Override
     public Move notify(int location, Set<Move> moves) {
         //TODO: Some clever AI here ...
@@ -256,7 +389,7 @@ public class MyAIPlayer implements Player{
 					throw new Error("Move isn't real");
 				}
 				
-				int score = score(newLocation);
+				int score = score(newLocation, detectives, graph.getNodes(), graph.getEdges(), Tickets);
 				if(score>bestScore){
 					bestScore = score;
 					bestMove = move;
@@ -284,7 +417,7 @@ public class MyAIPlayer implements Player{
 				}
 			}
 			
-			if(taxi && bus && underground && MrXTickets.get(Ticket.Secret)>0){
+			if(taxi && bus && underground && Tickets.get(Colour.Black).get(Ticket.Secret)>0){
 				if(bestMove instanceof MoveTicket){
 					return MoveTicket.instance(Colour.Black, Ticket.Secret, ((MoveTicket) bestMove).target);
 				}else if(bestMove instanceof MoveDouble){
@@ -305,20 +438,21 @@ public class MyAIPlayer implements Player{
 		
     }
 	
-    protected List<Move> validMoves(int location, Set<Integer> detectives, Set<Node> nodes, Set<Edge> edges, HashMap<Ticket, Integer> MrXTickets) {
+    protected List<Move> validMoves(HashMap<Colour, Integer> locations, Colour currentColour, Set<Node> nodes, Set<Edge> edges, HashMap<Colour, HashMap<Ticket, Integer>> Tickets) {
+    	HashMap<Ticket, Integer> currentTickets = Tickets.get(currentColour);
     	//Adds all the moves around a players current location.
-        List<MoveTicket> firstMoves = singleMoves(location, detectives, nodes, edges, MrXTickets);
+        List<MoveTicket> firstMoves = singleMoves(locations, currentColour, nodes, edges, Tickets);
         List<Move> allMoves = new ArrayList<Move>(firstMoves);
         //Adds double-moves to Mr.X's valid moves.
         for(MoveTicket firstMove: firstMoves){
-        		List<MoveTicket> secondMoves = singleMoves(firstMove.target, detectives, nodes, edges, MrXTickets);
+        		List<MoveTicket> secondMoves = singleMoves(locations, currentColour, nodes, edges, Tickets);
         		for(MoveTicket secondMove: secondMoves){
         			if(secondMove.ticket == firstMove.ticket){
-        				if(MrXTickets.get(firstMove.ticket)>1){
-        					allMoves.add(MoveDouble.instance(Colour.Black, firstMove, secondMove));
+        				if(currentTickets.get(firstMove.ticket)>1){
+        					allMoves.add(MoveDouble.instance(currentColour, firstMove, secondMove));
         				}
-        			}else if(MrXTickets.get(secondMove.ticket)>0){
-        				allMoves.add(MoveDouble.instance(Colour.Black, firstMove, secondMove));
+        			}else if(currentTickets.get(secondMove.ticket)>0){
+        				allMoves.add(MoveDouble.instance(currentColour, firstMove, secondMove));
         			}
         		}
         	}
@@ -326,14 +460,14 @@ public class MyAIPlayer implements Player{
         return allMoves;
     }
 	
-    private List<MoveTicket> singleMoves(int location, Set<Integer> detectives, Set<Node> nodes, Set<Edge> edges, HashMap<Ticket, Integer> MrXTickets) {
+    private List<MoveTicket> singleMoves(HashMap<Colour, Integer> locations, Colour currentColour, Set<Node> nodes, Set<Edge> edges, HashMap<Colour, HashMap<Ticket, Integer>> Tickets) {
     	
     	List<MoveTicket> moves = new ArrayList<MoveTicket>();
-    	
+    	int location = locations.get(currentColour);
     	for(Edge<Integer, Route> e: edges){
     		if(e.source()==location||e.target()==location){
-    			MoveTicket m = MoveTicket.instance(Colour.Black, Ticket.fromRoute(e.data()), e.other(location));
-    			if(!detectives.contains(e.other(location)) && MrXTickets.get(m.ticket)>0){ 
+    			MoveTicket m = MoveTicket.instance(currentColour, Ticket.fromRoute(e.data()), e.other(location));
+    			if(!detectives.contains(e.other(location)) && Tickets.get(currentColour).get(m.ticket)>0){ 
         			moves.add(m);
         		}
     		}
