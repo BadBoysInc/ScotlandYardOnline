@@ -28,7 +28,7 @@ public class AIMrXPlayerFactory implements PlayerFactory {
     String positionsFilename;
 
     protected List<Spectator> spectators;
-    Gui gui;
+    GUI2 gui;
 
     public AIMrXPlayerFactory() {
         typeMap = new HashMap<Colour, PlayerType>();
@@ -87,7 +87,7 @@ public class AIMrXPlayerFactory implements PlayerFactory {
     private Gui gui(ScotlandYardView view) {
         System.out.println("GUI");
         if (gui == null) try {
-            gui = new Gui(view, imageFilename, positionsFilename);
+            gui = new GUI2(view, imageFilename, positionsFilename);
             spectators.add(gui);
         }
         catch (IOException e) {

@@ -41,7 +41,7 @@ public class GuiGame {
         typeMap.put(Colour.Green,  AIMrXPlayerFactory.PlayerType.Random);
         typeMap.put(Colour.Red,    AIMrXPlayerFactory.PlayerType.Random);
         typeMap.put(Colour.White,  AIMrXPlayerFactory.PlayerType.Random);
-        typeMap.put(Colour.Yellow, AIMrXPlayerFactory.PlayerType.Random);
+        typeMap.put(Colour.Yellow, AIMrXPlayerFactory.PlayerType.GUI);
 
 
         Map<Ticket, Integer> mrXTickets = new HashMap<Ticket, Integer>();
