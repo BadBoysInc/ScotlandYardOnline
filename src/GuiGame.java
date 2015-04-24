@@ -9,8 +9,10 @@ import solution.ScotlandYardModel;
 
 import java.util.Arrays;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 
 /**
@@ -18,7 +20,13 @@ import java.util.Map;
  * the Gui on a local machine without the need for a server or judge.
  */
 public class GuiGame {
+	
+	static Set<Integer> locations;
+	
     public static void main(String[] args) {
+    	
+    	locations = new HashSet<Integer>();
+    	
         List<Boolean> rounds = Arrays.asList(
                 false,
                 false, false,
@@ -36,7 +44,7 @@ public class GuiGame {
         String imageFilename     = "resources/map.jpg";
 
         Map<Colour, PlayerType> typeMap = new HashMap<Colour, PlayerType>();
-        typeMap.put(Colour.Black,  AIMrXPlayerFactory.PlayerType.AI);
+        typeMap.put(Colour.Black,  AIMrXPlayerFactory.PlayerType.XAI);
         typeMap.put(Colour.Blue,   AIMrXPlayerFactory.PlayerType.Random);
         typeMap.put(Colour.Green,  AIMrXPlayerFactory.PlayerType.Random);
         typeMap.put(Colour.Red,    AIMrXPlayerFactory.PlayerType.Random);
@@ -60,12 +68,12 @@ public class GuiGame {
 
         PlayerFactory factory = new AIMrXPlayerFactory(typeMap, imageFilename, positionsFilename);
         ScotlandYard game = new ScotlandYardModel(5, rounds, graphFilename);
-        game.join(factory.player(Colour.Black,  game, graphFilename), Colour.Black, 194, mrXTickets);
-        game.join(factory.player(Colour.Blue,   game, graphFilename), Colour.Blue, 1, new HashMap<Ticket, Integer>(detectiveXTickets));
-        game.join(factory.player(Colour.Green,  game, graphFilename), Colour.Green, 15, new HashMap<Ticket, Integer>(detectiveXTickets));
-        game.join(factory.player(Colour.Red,    game, graphFilename), Colour.Red, 6, new HashMap<Ticket, Integer>(detectiveXTickets));
-        game.join(factory.player(Colour.Yellow, game, graphFilename), Colour.Yellow, 167, new HashMap<Ticket, Integer>(detectiveXTickets));
-        game.join(factory.player(Colour.White,  game, graphFilename), Colour.White, 5, new HashMap<Ticket, Integer>(detectiveXTickets));
+        game.join(factory.player(Colour.Black,  game, graphFilename), Colour.Black, getRandLocation(), mrXTickets);
+        game.join(factory.player(Colour.Blue,   game, graphFilename), Colour.Blue, getRandLocation(), new HashMap<Ticket, Integer>(detectiveXTickets));
+        game.join(factory.player(Colour.Green,  game, graphFilename), Colour.Green, getRandLocation(), new HashMap<Ticket, Integer>(detectiveXTickets));
+        game.join(factory.player(Colour.Red,    game, graphFilename), Colour.Red, getRandLocation(), new HashMap<Ticket, Integer>(detectiveXTickets));
+        game.join(factory.player(Colour.Yellow, game, graphFilename), Colour.Yellow, getRandLocation(), new HashMap<Ticket, Integer>(detectiveXTickets));
+        game.join(factory.player(Colour.White,  game, graphFilename), Colour.White, getRandLocation(), new HashMap<Ticket, Integer>(detectiveXTickets));
 
 
         for (Spectator spec : factory.getSpectators(game))
@@ -75,4 +83,15 @@ public class GuiGame {
         game.start();
 
     }
+    
+    
+    static int getRandLocation(){
+    	int r = (int) (Math.random()*198+1);
+    	while(locations.contains(r)){
+    		 r = (int) (Math.random()*198+1);
+    	}
+    	return r;
+    }
+    
+    
 }

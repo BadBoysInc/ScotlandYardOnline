@@ -22,7 +22,7 @@ import java.util.Map;
 public class AIMrXPlayerFactory implements PlayerFactory {
     protected Map<Colour, PlayerType> typeMap;
 
-    public enum PlayerType {AI, Random, GUI}
+    public enum PlayerType {XAI, SimpAI, Random, GUI}
 
     String imageFilename;
     String positionsFilename;
@@ -32,12 +32,12 @@ public class AIMrXPlayerFactory implements PlayerFactory {
 
     public AIMrXPlayerFactory() {
         typeMap = new HashMap<Colour, PlayerType>();
-        typeMap.put(Colour.Black, AIMrXPlayerFactory.PlayerType.AI);
-        typeMap.put(Colour.Blue, AIMrXPlayerFactory.PlayerType.GUI);
-        typeMap.put(Colour.Green, AIMrXPlayerFactory.PlayerType.GUI);
-        typeMap.put(Colour.Red, AIMrXPlayerFactory.PlayerType.Random);
-        typeMap.put(Colour.White, AIMrXPlayerFactory.PlayerType.Random);
-        typeMap.put(Colour.Yellow, AIMrXPlayerFactory.PlayerType.Random);
+        typeMap.put(Colour.Black, AIMrXPlayerFactory.PlayerType.XAI);
+        typeMap.put(Colour.Blue, AIMrXPlayerFactory.PlayerType.SimpAI);
+        typeMap.put(Colour.Green, AIMrXPlayerFactory.PlayerType.SimpAI);
+        typeMap.put(Colour.Red, AIMrXPlayerFactory.PlayerType.SimpAI);
+        typeMap.put(Colour.White, AIMrXPlayerFactory.PlayerType.SimpAI);
+        typeMap.put(Colour.Yellow, AIMrXPlayerFactory.PlayerType.SimpAI);
 
         positionsFilename = "resources/pos.txt";
         imageFilename     = "resources/map.jpg";
@@ -46,17 +46,23 @@ public class AIMrXPlayerFactory implements PlayerFactory {
     }
 
     public AIMrXPlayerFactory(Map<Colour, PlayerType> typeMap, String imageFilename, String positionsFilename) {
-        this.typeMap = typeMap;
+        //this.typeMap = typeMap;
+    	this();
         this.imageFilename = imageFilename;
         this.positionsFilename = positionsFilename;
         spectators = new ArrayList<Spectator>();
     }
 
-    @Override
+    private void AIMrXPlayerFactory() {
+	}
+
+	@Override
     public Player player(Colour colour, ScotlandYardView view, String mapFilename) {
         switch (typeMap.get(colour)) {
-            case AI:
+            case XAI:
                 return new MyAIPlayer(view, mapFilename);
+            case SimpAI:
+            	return new MySimpleAIPlayer(view, mapFilename);
             case Random:
                 return new RandomPlayer(view, mapFilename);
             case GUI:

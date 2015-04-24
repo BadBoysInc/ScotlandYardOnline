@@ -12,6 +12,7 @@ import scotlandyard.Edge;
 import scotlandyard.Graph;
 import scotlandyard.Move;
 import scotlandyard.MoveDouble;
+import scotlandyard.MovePass;
 import scotlandyard.MoveTicket;
 import scotlandyard.Node;
 import scotlandyard.Player;
@@ -260,7 +261,7 @@ public class MyAIPlayer implements Player{
 			while(!playersGet.next().equals(Colour.Black)){	}
 			
 			
-			MrXList.put(MrXMove, minMaxCalcNAI(playersGet, 5, mrxlocations, mrxtickets, nodes, edges));
+			MrXList.put(MrXMove, minMaxCalcNAI(playersGet, 2, mrxlocations, mrxtickets, nodes, edges));
 			
 		}
 		
@@ -299,7 +300,9 @@ public class MyAIPlayer implements Player{
 		Set<Move> validMoves = validMoves(locations, currentPlayer, nodes, edges, tickets);
 		if(validMoves.isEmpty()){
 			noMoves = true;
+			validMoves.add(MovePass.instance(currentPlayer));
 		}
+		
 		for(Move currentMove: validMoves){
 			
 			HashMap<Colour, HashMap<Ticket, Integer>> newTickets = new HashMap<Colour, HashMap<Ticket, Integer>>();
@@ -314,7 +317,6 @@ public class MyAIPlayer implements Player{
 					newTickets.get(Colour.Black).put(((MoveTicket) currentMove).ticket, newTickets.get(Colour.Black).get(((MoveTicket) currentMove).ticket)+1);
 				newLocations.put(currentPlayer, ((MoveTicket) currentMove).target);
 			}
-			
 			childScores.add(minMaxCalcNAI(playersGet, level-1,newLocations, newTickets, nodes, edges));
 		}
 		if(currentPlayer.equals(Colour.Black))
@@ -477,6 +479,7 @@ public class MyAIPlayer implements Player{
 		
 	}
 	*/
+	
 	private int max(Set<Integer> set) {
 		
 		int max = 0;
