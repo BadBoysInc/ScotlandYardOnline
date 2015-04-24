@@ -53,8 +53,6 @@ public class AIMrXPlayerFactory implements PlayerFactory {
         spectators = new ArrayList<Spectator>();
     }
 
-    private void AIMrXPlayerFactory() {
-	}
 
 	@Override
     public Player player(Colour colour, ScotlandYardView view, String mapFilename) {

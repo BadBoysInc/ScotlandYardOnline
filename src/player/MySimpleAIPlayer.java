@@ -1,12 +1,8 @@
 package player;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Hashtable;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Set;
 
 import scotlandyard.Colour;
@@ -19,7 +15,6 @@ import scotlandyard.MoveTicket;
 import scotlandyard.Node;
 import scotlandyard.Player;
 import scotlandyard.Route;
-import scotlandyard.ScotlandYard;
 import scotlandyard.ScotlandYardGraphReader;
 import scotlandyard.ScotlandYardView;
 import scotlandyard.Ticket;
@@ -99,10 +94,10 @@ public class MySimpleAIPlayer implements Player{
 				return 0;
 			}
 		
-			Set<Edge> edges = new HashSet<Edge>(graph.getEdges());
-			Set<Node> nodes = new HashSet<Node>(graph.getNodes());
+			Set<Edge<Integer, Route>> edges = new HashSet<Edge<Integer, Route>>(graph.getEdges());
+			Set<Node<Integer>> nodes = new HashSet<Node<Integer>>(graph.getNodes());
 			
-			for(Edge e: graph.getEdges()){
+			for(Edge<Integer, Route> e: graph.getEdges()){
 				if(e.data().equals(Route.Boat)){
 					edges.remove(e);
 				}
@@ -114,8 +109,8 @@ public class MySimpleAIPlayer implements Player{
 			int distance = Integer.MAX_VALUE;
 			
 			//Start at Mr X location.
-			Set<Node> currentNodes =  new HashSet<Node>();
-			Node detectNode = findNode(detect, nodes);
+			Set<Node<Integer>> currentNodes =  new HashSet<Node<Integer>>();
+			Node<Integer> detectNode = findNode(detect, nodes);
 			if(detectNode == null){
 				System.err.println("Mr X not on valid location");
 			}
@@ -126,13 +121,13 @@ public class MySimpleAIPlayer implements Player{
 			while( distance == Integer.MAX_VALUE){
 				
 				//Get nodes one step away.
-				Set<Node> neighbours = getNeighbours(currentNodes, nodes, edges);
+				Set<Node<Integer>> neighbours = getNeighbours(currentNodes, nodes, edges);
 				currentDistance++;
 				//Remove seen nodes.
 				nodes.remove(neighbours);
 				
 				//If they are detective locations update the shortest distance.
-				for(Node n: neighbours){
+				for(Node<Integer> n: neighbours){
 					if(mrX.equals(n.data())){
 						return currentDistance;
 					}				
@@ -152,14 +147,14 @@ public class MySimpleAIPlayer implements Player{
 	 * @param Set of all edges
 	 * @return Set of neighbouring nodes to currentNodes
 	 */
-	private Set<Node> getNeighbours(Set<Node> currentNodes, Set<Node> nodes, Set<Edge> edges) {
-		Set<Node> neighbours = new HashSet<Node>();
-		for(Edge e: edges){
-			for(Node currentNode: currentNodes){
+	private Set<Node<Integer>> getNeighbours(Set<Node<Integer>> currentNodes, Set<Node<Integer>> nodes, Set<Edge<Integer, Route>> edges) {
+		Set<Node<Integer>> neighbours = new HashSet<Node<Integer>>();
+		for(Edge<Integer, Route> e: edges){
+			for(Node<Integer> currentNode: currentNodes){
 				//check if current edge is connected to current node.
 				if(e.source().equals(currentNode.data()) || e.target().equals(currentNode.data()) ){
 					//If node is still to be reached (Ie. still in "nodes") add to neighbour set.
-					Node n = findNode((Integer) e.other(currentNode.data()), nodes);
+					Node<Integer> n = findNode((Integer) e.other(currentNode.data()), nodes);
 					if(n != null){
 						neighbours.add(n);
 					}
@@ -174,8 +169,8 @@ public class MySimpleAIPlayer implements Player{
 	 * @param Set of nodes
 	 * @return Node from set with matching data, null if none match.
 	 */
-	private Node findNode(Integer i, Set<Node> nodes) {
-		for(Node node: nodes){
+	private Node<Integer> findNode(Integer i, Set<Node<Integer>> nodes) {
+		for(Node<Integer> node: nodes){
 			if(node.data().equals(i)){
 				return node;
 			}
@@ -237,8 +232,6 @@ public class MySimpleAIPlayer implements Player{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		String s = null;
-		s.length();
 		System.err.println("Someting has gone wrong");
 		return moves.iterator().next();
 		

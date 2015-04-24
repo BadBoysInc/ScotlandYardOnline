@@ -2,7 +2,6 @@ package player;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Comparator;
 import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Set;
@@ -10,9 +9,9 @@ import java.util.Set;
 import scotlandyard.Colour;
 import scotlandyard.Edge;
 import scotlandyard.Graph;
-import scotlandyard.GraphReader;
 import scotlandyard.Move;
 import scotlandyard.Node;
+import scotlandyard.Route;
 import scotlandyard.ScotlandYardGraphReader;
 import scotlandyard.ScotlandYardView;
 
@@ -54,7 +53,7 @@ public class ScoringRandomPlayer extends RandomPlayer {
 		ScotlandYardGraphReader reader = new ScotlandYardGraphReader();
 
 		try {
-			Graph graph = reader.readGraph(graphFilename);
+			Graph<Integer, Route> graph = reader.readGraph(graphFilename);
 			
 			int totalDistanceToDetectives;
 			if(mrX != 0){
@@ -87,10 +86,10 @@ public class ScoringRandomPlayer extends RandomPlayer {
 	 * @param graph 
 	 * @return total distance from Mr X to detectives.
 	 */
-	private int doSelectiveNOTDijkstra(Integer mrX, ArrayList<Integer> detectives,	Graph graph) {
+	private int doSelectiveNOTDijkstra(Integer mrX, ArrayList<Integer> detectives,	Graph<Integer, Route> graph) {
 				
-			Set<Edge> edges = graph.getEdges();
-			Set<Node> nodes = graph.getNodes();
+			Set<Edge<Integer, Route>> edges = graph.getEdges();
+			Set<Node<Integer>> nodes = graph.getNodes();
 			
 			int currentDistance = 0;
 			
@@ -103,8 +102,8 @@ public class ScoringRandomPlayer extends RandomPlayer {
 			}
 			
 			//Start at Mr X location.
-			Set<Node> currentNodes =  new HashSet<Node>();
-			Node mrXNode = findNode(mrX, nodes);
+			Set<Node<Integer>> currentNodes =  new HashSet<Node<Integer>>();
+			Node<Integer> mrXNode = findNode(mrX, nodes);
 			if(mrXNode == null){
 				System.err.println("Mr X not on valid location");
 			}
@@ -116,13 +115,13 @@ public class ScoringRandomPlayer extends RandomPlayer {
 			while(!detectives.isEmpty()){
 				
 				//Get nodes one step away.
-				Set<Node> neighbours = getNeighbours(currentNodes, nodes, edges);
+				Set<Node<Integer>> neighbours = getNeighbours(currentNodes, nodes, edges);
 				currentDistance++;
 				//Remove seen nodes.
 				nodes.remove(neighbours);
 				
 				//If they are detective locations update the shortest distance.
-				for(Node n: neighbours){
+				for(Node<Integer> n: neighbours){
 					if(detectives.contains(n.data())){
 						if(currentDistance < detectiveDistances.get(n.data())){
 							detectiveDistances.put((Integer) n.data(), currentDistance);
@@ -149,14 +148,14 @@ public class ScoringRandomPlayer extends RandomPlayer {
 	 * @param Set of all edges
 	 * @return Set of neighbouring nodes to currentNodes
 	 */
-	private Set<Node> getNeighbours(Set<Node> currentNodes, Set<Node> nodes, Set<Edge> edges) {
-		Set<Node> neighbours = new HashSet<Node>();
-		for(Edge e: edges){
-			for(Node currentNode: currentNodes){
+	private Set<Node<Integer>> getNeighbours(Set<Node<Integer>> currentNodes, Set<Node<Integer>> nodes, Set<Edge<Integer, Route>> edges) {
+		Set<Node<Integer>> neighbours = new HashSet<Node<Integer>>();
+		for(Edge<Integer, Route> e: edges){
+			for(Node<Integer> currentNode: currentNodes){
 				//check if current edge is connected to current node.
 				if(e.source().equals(currentNode.data()) || e.target().equals(currentNode.data()) ){
 					//If node is still to be reached (Ie. still in "nodes") add to neighbour set.
-					Node n = findNode((Integer) e.other(currentNode.data()), nodes);
+					Node<Integer> n = findNode((Integer) e.other(currentNode.data()), nodes);
 					if(n != null){
 						neighbours.add(n);
 					}
@@ -171,8 +170,8 @@ public class ScoringRandomPlayer extends RandomPlayer {
 	 * @param Set of nodes
 	 * @return Node from set with matching data, null if none match.
 	 */
-	private Node findNode(Integer i, Set<Node> nodes) {
-		for(Node node: nodes){
+	private Node<Integer> findNode(Integer i, Set<Node<Integer>> nodes) {
+		for(Node<Integer> node: nodes){
 			if(node.data().equals(i)){
 				return node;
 			}
