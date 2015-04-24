@@ -1,13 +1,10 @@
 package player;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import scotlandyard.Colour;
@@ -15,12 +12,10 @@ import scotlandyard.Edge;
 import scotlandyard.Graph;
 import scotlandyard.Move;
 import scotlandyard.MoveDouble;
-import scotlandyard.MovePass;
 import scotlandyard.MoveTicket;
 import scotlandyard.Node;
 import scotlandyard.Player;
 import scotlandyard.Route;
-import scotlandyard.ScotlandYard;
 import scotlandyard.ScotlandYardGraphReader;
 import scotlandyard.ScotlandYardView;
 import scotlandyard.Ticket;
@@ -30,11 +25,13 @@ public class MyAIPlayer implements Player{
 
 	ScotlandYardView view;
 	String graphFilename;
-	Graph graph;
+	Graph<Integer, Route> graph;
 	Set<Integer> detectives;
+	Set<Colour> players;
 	HashMap<Colour, HashMap<Ticket, Integer>> Tickets;
 	HashMap<Colour, Integer> Locations;
-	boolean DEBUG = false;
+	boolean playerPrint = false;
+	boolean levelPrint = true;
 	GraphDisplay graphDisplay;
 	
 	
@@ -48,12 +45,14 @@ public class MyAIPlayer implements Player{
 		//getting detective locations
 		detectives = new HashSet<Integer>();
 		Locations = new HashMap<Colour, Integer>();
+		players = new HashSet<Colour>();
 		
 		for(Colour player: this.view.getPlayers()){
 			if(player != Colour.Black){
 				detectives.add(this.view.getPlayerLocation(player));
 			}
-				Locations.put(player, view.getPlayerLocation(player));
+			Locations.put(player, view.getPlayerLocation(player));
+			players.add(player);	
 			
 		}
 		
@@ -82,10 +81,11 @@ public class MyAIPlayer implements Player{
 	 * @param His valid moves 
 	 * @return Integer score of board, from distance to detectives and number of possible moves.
 	 */
-	private int score(int location, Set<Integer> detectives, Set<Node<Integer>> nodes, Set<Edge<Integer, Route>> edges, HashMap<Colour, HashMap<Ticket, Integer>> tickets){
+	private int score(HashMap<Colour, Integer> locations, Set<Node<Integer>> nodes, Set<Edge<Integer, Route>> edges, HashMap<Colour, HashMap<Ticket, Integer>> tickets){
 		
 		//getting location
-		Integer mrX = location;
+		Integer mrX = locations.get(Colour.Black);
+		
 		
 		//getting distance to detectives
 		int totalDistanceToDetectives = 0;
@@ -102,13 +102,13 @@ public class MyAIPlayer implements Player{
 		}
 		
 		
-		int positionOnBoard = 509 - Math.abs(graphDisplay.getX(location) - 509) + 404 - Math.abs(graphDisplay.getY(location) - 404);
+		int positionOnBoard = 509 - Math.abs(graphDisplay.getX(mrX) - 509) + 404 - Math.abs(graphDisplay.getY(mrX) - 404);
 		
 		
 		
 		
 		//getting number of valid moves
-		int MrXcurrentOptions = validMoves(Locations, Colour.Black, nodes, edges, tickets).size();
+		int MrXcurrentOptions = validMoves(locations, Colour.Black, nodes, edges, tickets).size();
 		
 		
 		
@@ -119,13 +119,13 @@ public class MyAIPlayer implements Player{
 		int minDistanceScale = 500;
 		int positionScale = 1;
 		
-		System.out.println(String.format("MOVE(%d) totdist: %d, mindist: %d, numMoves: %d, pos: %d",
-				location,
+		/*System.out.println(String.format("MOVE(%d) totdist: %d, mindist: %d, numMoves: %d, pos: %d",
+				mrX,
 				distanceFromDetectivesScale*totalDistanceToDetectives, 
 				minDistanceScale*minDistanceToDetectives, 
 				currentOptionsScale*MrXcurrentOptions, 
 				positionScale*positionOnBoard));
-		
+		*/
 		
 		return (distanceFromDetectivesScale*totalDistanceToDetectives + 
 				currentOptionsScale*MrXcurrentOptions + 
@@ -142,8 +142,8 @@ public class MyAIPlayer implements Player{
 	 */
 	private Hashtable<Integer, Integer>  breathfirstNodeSearch(Integer mrX, Set<Integer> d, Set<Node<Integer>> nodes2, Set<Edge<Integer, Route>> edges2) {
 			
-			Set<Edge> edges = new HashSet<Edge>(edges2);
-			Set<Node> nodes = new HashSet<Node>(nodes2);
+			Set<Edge<Integer, Route>> edges = new HashSet<Edge<Integer, Route>>(edges2);
+			Set<Node<Integer>> nodes = new HashSet<Node<Integer>>(nodes2);
 			Set<Integer> detectives = new HashSet<Integer>(d);
 			
 			
@@ -158,8 +158,8 @@ public class MyAIPlayer implements Player{
 			}
 			
 			//Start at Mr X location.
-			Set<Node> currentNodes =  new HashSet<Node>();
-			Node mrXNode = findNode(mrX, nodes);
+			Set<Node<Integer>> currentNodes =  new HashSet<Node<Integer>>();
+			Node<Integer> mrXNode = findNode(mrX, nodes);
 			if(mrXNode == null){
 				System.err.println("Mr X not on valid location");
 			}
@@ -170,13 +170,13 @@ public class MyAIPlayer implements Player{
 			while(!detectives.isEmpty()){
 				
 				//Get nodes one step away.
-				Set<Node> neighbours = getNeighbours(currentNodes, nodes, edges);
+				Set<Node<Integer>> neighbours = getNeighbours(currentNodes, nodes, edges);
 				currentDistance++;
 				//Remove seen nodes.
 				nodes.remove(neighbours);
 				
 				//If they are detective locations update the shortest distance.
-				for(Node n: neighbours){
+				for(Node<Integer> n: neighbours){
 					if(detectives.contains(n.data())){
 						if(currentDistance < detectiveDistances.get(n.data())){
 							detectiveDistances.put((Integer) n.data(), currentDistance);
@@ -200,14 +200,14 @@ public class MyAIPlayer implements Player{
 	 * @param Set of all edges
 	 * @return Set of neighbouring nodes to currentNodes
 	 */
-	private Set<Node> getNeighbours(Set<Node> currentNodes, Set<Node> nodes, Set<Edge> edges) {
-		Set<Node> neighbours = new HashSet<Node>();
-		for(Edge e: edges){
-			for(Node currentNode: currentNodes){
+	private Set<Node<Integer>> getNeighbours(Set<Node<Integer>> currentNodes, Set<Node<Integer>> nodes, Set<Edge<Integer, Route>> edges) {
+		Set<Node<Integer>> neighbours = new HashSet<Node<Integer>>();
+		for(Edge<Integer, Route> e: edges){
+			for(Node<Integer> currentNode: currentNodes){
 				//check if current edge is connected to current node.
 				if(e.source().equals(currentNode.data()) || e.target().equals(currentNode.data()) ){
 					//If node is still to be reached (Ie. still in "nodes") add to neighbour set.
-					Node n = findNode((Integer) e.other(currentNode.data()), nodes);
+					Node<Integer> n = findNode((Integer) e.other((Integer) currentNode.data()), nodes);
 					if(n != null){
 						neighbours.add(n);
 					}
@@ -222,8 +222,8 @@ public class MyAIPlayer implements Player{
 	 * @param Set of nodes
 	 * @return Node from set with matching data, null if none match.
 	 */
-	private Node findNode(Integer i, Set<Node> nodes) {
-		for(Node node: nodes){
+	private Node<Integer> findNode(Integer i, Set<Node<Integer>> nodes) {
+		for(Node<Integer> node: nodes){
 			if(node.data().equals(i)){
 				return node;
 			}
@@ -238,7 +238,9 @@ public class MyAIPlayer implements Player{
 		
 		Set<Node<Integer>> nodes = graph.getNodes();
 		Set<Edge<Integer, Route>> edges = graph.getEdges();
-		for(Move MrXMove: validMoves(Locations, Colour.Black, nodes, edges, Tickets)){
+		Set<Move> singlemoves = validMoves(Locations, Colour.Black, nodes, edges, Tickets);
+		System.out.println(singlemoves);
+		for(Move MrXMove: singlemoves){
 			HashMap<Colour, Integer> mrxlocations = new HashMap<Colour, Integer>(Locations);
 			HashMap<Colour, HashMap<Ticket, Integer>> mrxtickets = new HashMap<Colour, HashMap<Ticket, Integer>>(Tickets);
 			int target = 0;
@@ -254,7 +256,11 @@ public class MyAIPlayer implements Player{
 			}
 			mrxlocations.put(Colour.Black, target);
 			
-			MrXList.put(MrXMove, minMaxCalc(20, mrxlocations, mrxtickets, nodes, edges));
+			Iterator<Colour> playersGet = players.iterator();
+			while(!playersGet.next().equals(Colour.Black)){	}
+			
+			
+			MrXList.put(MrXMove, minMaxCalcNAI(playersGet, 5, mrxlocations, mrxtickets, nodes, edges));
 			
 		}
 		
@@ -274,25 +280,56 @@ public class MyAIPlayer implements Player{
 		
 	}
 	
-	private int minMaxCalc(int level, HashMap<Colour, Integer> locations, HashMap<Colour, HashMap<Ticket, Integer>> tickets, Set<Node<Integer>> nodes, Set<Edge<Integer, Route>> edges){
-		String s = "";
-		for(int x = 0; x<level; x++){
-			s = s + "\t";
+	private int minMaxCalcNAI(Iterator<Colour> playersGet, int level, HashMap<Colour, Integer> locations, HashMap<Colour, HashMap<Ticket, Integer>> tickets, Set<Node<Integer>> nodes, Set<Edge<Integer, Route>> edges){
+		
+		Colour currentPlayer;
+		if(playersGet.hasNext()){
+			currentPlayer = playersGet.next();
+		}else{
+			playersGet = players.iterator();
+			currentPlayer = playersGet.next();
 		}
-		s = s + Integer.toString(level);
-		System.out.println(s);
 		
 		if(level == 0){
-			int mrX = 0;
-			Set<Integer> d = new HashSet<Integer>();
-			for(Colour c: locations.keySet()){
-				if(c.equals(Colour.Black)){
-					mrX = locations.get(c);
-				}else{
-					d.add(locations.get(c));
-				}	
+			return score(locations, nodes, edges, tickets);
+		}
+		
+		Set<Integer> childScores = new HashSet<Integer>();
+		boolean noMoves = false;
+		Set<Move> validMoves = validMoves(locations, currentPlayer, nodes, edges, tickets);
+		if(validMoves.isEmpty()){
+			noMoves = true;
+		}
+		for(Move currentMove: validMoves){
+			
+			HashMap<Colour, HashMap<Ticket, Integer>> newTickets = new HashMap<Colour, HashMap<Ticket, Integer>>();
+			for(Colour c: tickets.keySet()){
+				newTickets.put(c, new HashMap<Ticket, Integer>(tickets.get(c)));
 			}
-			return score(mrX, d, nodes, edges, tickets);
+			HashMap<Colour, Integer> newLocations = new HashMap<Colour, Integer>(locations);
+			if(!noMoves){
+				HashMap<Ticket, Integer> tmptickets = newTickets.get(currentPlayer);
+				tmptickets.put(((MoveTicket) currentMove).ticket, tmptickets.get(((MoveTicket) currentMove).ticket)-1);
+				if(!currentPlayer.equals(Colour.Black))
+					newTickets.get(Colour.Black).put(((MoveTicket) currentMove).ticket, newTickets.get(Colour.Black).get(((MoveTicket) currentMove).ticket)+1);
+				newLocations.put(currentPlayer, ((MoveTicket) currentMove).target);
+			}
+			
+			childScores.add(minMaxCalcNAI(playersGet, level-1,newLocations, newTickets, nodes, edges));
+		}
+		if(currentPlayer.equals(Colour.Black))
+			return max(childScores);
+		return min(childScores);
+	}
+	
+	/*
+	private int minMaxCalc(int level, HashMap<Colour, Integer> locations, HashMap<Colour, HashMap<Ticket, Integer>> tickets, Set<Node<Integer>> nodes, Set<Edge<Integer, Route>> edges){
+		
+		
+		
+		
+		if(level == 0){
+			return score(locations, nodes, edges, tickets);
 		}
 		
 		HashMap<Ticket, Integer> tmptickets;
@@ -304,7 +341,11 @@ public class MyAIPlayer implements Player{
 				d1Pass = true;
 			}
 			for(Move d1Move: d1Moves){
-				HashMap<Colour, HashMap<Ticket, Integer>> d1tickets = new HashMap<Colour, HashMap<Ticket, Integer>>(tickets);
+				
+				HashMap<Colour, HashMap<Ticket, Integer>> d1tickets = new HashMap<Colour, HashMap<Ticket, Integer>>();
+				for(Colour c: tickets.keySet()){
+					d1tickets.put(c, new HashMap<Ticket, Integer>(tickets.get(c)));
+				}
 				HashMap<Colour, Integer> d1locations = new HashMap<Colour, Integer>(locations);
 				if(!d1Pass){
 					tmptickets = d1tickets.get(Colour.Blue);
@@ -312,15 +353,19 @@ public class MyAIPlayer implements Player{
 					d1tickets.get(Colour.Black).put(((MoveTicket) d1Move).ticket, d1tickets.get(Colour.Black).get(((MoveTicket) d1Move).ticket)+1);
 					d1locations.put(Colour.Blue, ((MoveTicket) d1Move).target);
 				}
+				Set d2 = new HashSet<Integer>();
 				boolean d2Pass = false;
-				Set<Move> d2Moves = validMoves(locations, Colour.Green, nodes, edges, tickets);
+				Set<Move> d2Moves = validMoves(d1locations, Colour.Green, nodes, edges, tickets);
 				if(d2Moves.isEmpty()){
 					d2Pass = true;
 				}
-				Set d2 = new HashSet<Integer>();
 				for(Move d2Move: d2Moves){
 					
-					HashMap<Colour, HashMap<Ticket, Integer>> d2tickets = new HashMap<Colour, HashMap<Ticket, Integer>>(d1tickets);
+					HashMap<Colour, HashMap<Ticket, Integer>> d2tickets = new HashMap<Colour, HashMap<Ticket, Integer>>();
+					for(Colour c: d1tickets.keySet()){
+						d2tickets.put(c, new HashMap<Ticket, Integer>(d1tickets.get(c)));
+					}
+					
 					HashMap<Colour, Integer> d2locations = new HashMap<Colour, Integer>(d1locations);
 					if(!d2Pass){
 						tmptickets = d2tickets.get(Colour.Green);
@@ -329,13 +374,16 @@ public class MyAIPlayer implements Player{
 						d2locations.put(Colour.Green, ((MoveTicket) d2Move).target);
 					}
 					boolean d3Pass = false;
-					Set<Move> d3Moves = validMoves(locations, Colour.Red, nodes, edges, tickets);
+					Set<Move> d3Moves = validMoves(d2locations, Colour.Red, nodes, edges, tickets);
 					if(d3Moves.isEmpty()){
 						d3Pass = true;
 					}
 					Set d3 = new HashSet<Integer>();
 					for(Move d3Move: d3Moves){
-						HashMap<Colour, HashMap<Ticket, Integer>> d3tickets = new HashMap<Colour, HashMap<Ticket, Integer>>(d2tickets);
+						HashMap<Colour, HashMap<Ticket, Integer>> d3tickets = new HashMap<Colour, HashMap<Ticket, Integer>>();
+						for(Colour c: d2tickets.keySet()){
+							d3tickets.put(c, new HashMap<Ticket, Integer>(d2tickets.get(c)));
+						}
 						HashMap<Colour, Integer> d3locations = new HashMap<Colour, Integer>(d2locations);
 						if(!d2Pass){
 							tmptickets = d3tickets.get(Colour.Red);
@@ -344,13 +392,16 @@ public class MyAIPlayer implements Player{
 							d3locations.put(Colour.Red, ((MoveTicket) d3Move).target);
 						}
 						boolean d4Pass = false;
-						Set<Move> d4Moves = validMoves(locations, Colour.White, nodes, edges, tickets);
+						Set<Move> d4Moves = validMoves(d3locations, Colour.White, nodes, edges, tickets);
 						if(d4Moves.isEmpty()){
 							d4Pass = true;
 						}
 						Set d4 = new HashSet<Integer>();
 						for(Move d4Move: d4Moves){
-							HashMap<Colour, HashMap<Ticket, Integer>> d4tickets = new HashMap<Colour, HashMap<Ticket, Integer>>(d3tickets);
+							HashMap<Colour, HashMap<Ticket, Integer>> d4tickets = new HashMap<Colour, HashMap<Ticket, Integer>>();
+							for(Colour c: d3tickets.keySet()){
+								d4tickets.put(c, new HashMap<Ticket, Integer>(d3tickets.get(c)));
+							}
 							HashMap<Colour, Integer> d4locations = new HashMap<Colour, Integer>(d3locations);
 							if(d4Pass){
 								tmptickets = d4tickets.get(Colour.White);
@@ -359,13 +410,16 @@ public class MyAIPlayer implements Player{
 								d4locations.put(Colour.White, ((MoveTicket) d4Move).target);
 							}
 							boolean d5Pass = false;
-							Set<Move> d5Moves = validMoves(locations, Colour.Yellow, nodes, edges, tickets);
+							Set<Move> d5Moves = validMoves(d4locations, Colour.Yellow, nodes, edges, tickets);
 							if(d5Moves.isEmpty()){
 								d5Pass = true;
 							}
 							Set d5 = new HashSet<Integer>();
 							for(Move d5Move: d5Moves){
-								HashMap<Colour, HashMap<Ticket, Integer>> d5tickets = new HashMap<Colour, HashMap<Ticket, Integer>>(d4tickets);
+								HashMap<Colour, HashMap<Ticket, Integer>> d5tickets = new HashMap<Colour, HashMap<Ticket, Integer>>();
+								for(Colour c: d4tickets.keySet()){
+									d5tickets.put(c, new HashMap<Ticket, Integer>(d4tickets.get(c)));
+								}
 								HashMap<Colour, Integer> d5locations = new HashMap<Colour, Integer>(d4locations);
 								if(d5Pass){
 									tmptickets = d5tickets.get(Colour.Yellow);
@@ -374,8 +428,11 @@ public class MyAIPlayer implements Player{
 									d5locations.put(Colour.Yellow, ((MoveTicket) d5Move).target);
 								}
 								Set Mrx = new HashSet<Integer>();
-								for(Move MrXMove: validMoves(locations, Colour.Black, nodes, edges, tickets)){
+								for(Move MrXMove: validMoves(d5locations, Colour.Black, nodes, edges, tickets)){
 									HashMap<Colour, HashMap<Ticket, Integer>> xtickets = new HashMap<Colour, HashMap<Ticket, Integer>>(d5tickets);
+									for(Colour c: d5tickets.keySet()){
+										xtickets.put(c, new HashMap<Ticket, Integer>(d5tickets.get(c)));
+									}
 									HashMap<Colour, Integer> xlocations = new HashMap<Colour, Integer>(d5locations);
 									int target = 0;
 									if(MrXMove instanceof MoveDouble){
@@ -389,29 +446,37 @@ public class MyAIPlayer implements Player{
 										tmptickets.put(((MoveTicket) MrXMove).ticket, tmptickets.get(((MoveTicket) MrXMove).ticket)-1);
 									}
 									xlocations.put(Colour.Black, target);
+									if(levelPrint){
+										String s = "";
+										for(int x = 0; x<level; x++){
+											s = s + "\t";
+										}
+										s = s + "Level: " + Integer.toString(level);
+										System.out.println(s);
+									}
 									
 									Mrx.add(minMaxCalc(level-1,xlocations,xtickets,nodes, edges));
 								}
 								d5.add(max(Mrx));
-								System.out.println("\t1 Finished");
+								if(playerPrint)System.out.println("\t1 Finished");
 							}
 							d4.add(min(d5));
-							System.out.println("\t\t2 Finished");
+							if(playerPrint)System.out.println("\t\t2 Finished");
 						}
 						d3.add(min(d4));
-						System.out.println("\t\t\t3 Finished");
+						if(playerPrint)System.out.println("\t\t\t3 Finished");
 					}
 					d2.add(min(d3));
-					System.out.println("\t\t\t\t4 Finished");
+					if(playerPrint)System.out.println("\t\t\t\t4 Finished");
 				}
 				d1.add(min(d2));
-				System.out.println("\t\t\t\t\t5 Finished");
+				if(playerPrint)System.out.println("\t\t\t\t\t5 Finished");
 			}
-			System.out.println("Move Analysed");
+			if(playerPrint)System.out.println("Move Analysed");
 		return min(d1);
 		
 	}
-	
+	*/
 	private int max(Set<Integer> set) {
 		
 		int max = 0;
@@ -440,7 +505,6 @@ public class MyAIPlayer implements Player{
 
 	@Override
     public Move notify(int location, Set<Move> moves) {
-        //TODO: Some clever AI here ...
 
 		try {
 			scoreInit();
@@ -509,8 +573,6 @@ public class MyAIPlayer implements Player{
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		String s = null;
-		s.length();
 		System.err.println("Someting has gone wrong");
 		return moves.iterator().next();
 		
