@@ -116,7 +116,7 @@ public class MyAIPlayer implements Player{
 		//Scaling factors
 		int distanceFromDetectivesScale = 75;
 		int currentOptionsScale = 2;
-		int minDistanceScale = 300;
+		int minDistanceScale = 500;
 		int positionScale = 1;
 		
 		System.out.println(String.format("MOVE(%d) totdist: %d, mindist: %d, numMoves: %d, pos: %d",
@@ -254,7 +254,7 @@ public class MyAIPlayer implements Player{
 			}
 			mrxlocations.put(Colour.Black, target);
 			
-			MrXList.put(MrXMove, minMaxCalc(4, mrxlocations, mrxtickets, nodes, edges));
+			MrXList.put(MrXMove, minMaxCalc(20, mrxlocations, mrxtickets, nodes, edges));
 			
 		}
 		
@@ -275,6 +275,13 @@ public class MyAIPlayer implements Player{
 	}
 	
 	private int minMaxCalc(int level, HashMap<Colour, Integer> locations, HashMap<Colour, HashMap<Ticket, Integer>> tickets, Set<Node<Integer>> nodes, Set<Edge<Integer, Route>> edges){
+		String s = "";
+		for(int x = 0; x<level; x++){
+			s = s + "\t";
+		}
+		s = s + Integer.toString(level);
+		System.out.println(s);
+		
 		if(level == 0){
 			int mrX = 0;
 			Set<Integer> d = new HashSet<Integer>();
