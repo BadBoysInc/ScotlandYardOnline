@@ -4,11 +4,8 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Hashtable;
-import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.TreeSet;
 
 import scotlandyard.Colour;
 import scotlandyard.Edge;
@@ -119,15 +116,6 @@ public class MyAIPlayer implements Player{
 		
 		//getting number of valid moves
 		int MrXcurrentOptions = validMoves.size();
-
-		
-		/*System.out.println(String.format("MOVE(%d) totdist: %d, mindist: %d, numMoves: %d, pos: %d",
-				mrX,
-				distanceFromDetectivesScale*totalDistanceToDetectives, 
-				minDistanceScale*minDistanceToDetectives, 
-				currentOptionsScale*MrXcurrentOptions, 
-				positionScale*positionOnBoard));
-		*/
 		
 		return (distanceFromDetectivesScale*totalDistanceToDetectives + 
 				currentOptionsScale*MrXcurrentOptions + 
@@ -247,13 +235,13 @@ public class MyAIPlayer implements Player{
 			
 			for(Move MrXMove: singlemoves){
 				
-				if(Debug.printOutEndGame)System.out.println(MrXMove);
+				if(Debug.printOutEndGame)System.out.println("Analysing "+MrXMove);
 				
 				model.setData(Tickets, Locations, Colour.Black, savedRound);
 				
 				model.turn(MrXMove);
 				
-				int score = minMaxCalc(4, bestChildScore, true);
+				int score = minMaxCalc(5, bestChildScore, true);
 				
 				MrXMoves.put(MrXMove, score);
 				bestChildScore = Math.max(bestChildScore, score);
@@ -325,17 +313,8 @@ public class MyAIPlayer implements Player{
 
 				bestChildScore = Math.max(bestChildScore, score);
 				
-				boolean aphaBetaOptimise = false;
 				if(score>bestPreComputedSibling){
-					aphaBetaOptimise = true;
 					break;
-				}
-				
-				if(aphaBetaOptimise){
-					if(Debug.printOutGeneral)System.out.println("Optimised.");
-					break;
-				}else{
-					if(Debug.printOutGeneral)System.out.println("Could not optimise.");
 				}
 			}
 		}else if(afterMrX){
@@ -351,21 +330,12 @@ public class MyAIPlayer implements Player{
 				if(Debug.printOutGeneral)System.out.println(printLevel(level));
 				int score = minMaxCalc(level-1, bestChildScore, false);
 				if(Debug.printOutGeneral)System.out.println(printLevel(level));
+				
 				bestChildScore = Math.min(bestChildScore, score);
 				
-				boolean aphaBetaOptimise = false;
 				if(score<bestPreComputedSibling){
-					aphaBetaOptimise = true;
 					break;
 				}
-				
-				if(aphaBetaOptimise){
-					if(Debug.printOutGeneral)System.out.println(printLevel(level) +" Optimised.");
-					break;
-				}else{
-					if(Debug.printOutGeneral)System.out.println(printLevel(level) +" Could not optimise.");
-				}
-				
 			}
 		}else{
 			
@@ -396,7 +366,6 @@ public class MyAIPlayer implements Player{
 		s = s + "Level"+Integer.toString(l);
 		return s;
 	}
-	
 
 	@Override
     public Move notify(int location, Set<Move> moves) {
@@ -405,44 +374,41 @@ public class MyAIPlayer implements Player{
 			scoreInit(location);
 			Locations.put(Colour.Black, location);
 		
-			Set<Move> tmp = new HashSet<Move>(moves);
-			
-			for(Move m: tmp){
-				if(m instanceof MoveDouble){
-					moves.remove(m);
-				}
-			}
-			
 			Move bestMove = MinMaxTree(location, moves);
+						
+			System.out.println("Move Choosen: "+bestMove);
 			
 			
 			
-			System.out.println(bestMove);
-			System.out.println("");
-			
-			boolean taxi = false;
-			boolean bus = false;
-			boolean underground = false;
-			for(Move move: moves){
-				if(move instanceof MoveTicket){
-					if(((MoveTicket) move).ticket.equals(Ticket.Taxi)){
-						taxi = true;
+			if(view.getPlayerLocation(Colour.Black) != 0){
+				
+				boolean taxi = false;
+				boolean bus = false;
+				boolean underground = false;
+				for(Move move: moves){
+					if(move instanceof MoveTicket){
+						if(((MoveTicket) move).ticket.equals(Ticket.Taxi)){
+							taxi = true;
+						}
+						if(((MoveTicket) move).ticket.equals(Ticket.Bus)){
+							bus = true;
+						}
+						if(((MoveTicket) move).ticket.equals(Ticket.Underground)){
+							underground = true;
+						}
+						
 					}
-					if(((MoveTicket) move).ticket.equals(Ticket.Bus)){
-						bus = true;
-					}
-					if(((MoveTicket) move).ticket.equals(Ticket.Underground)){
-						underground = true;
-					}
-					
 				}
-			}
-			
-			if(taxi && bus && underground && Tickets.get(Colour.Black).get(Ticket.Secret)>0){
-				if(bestMove instanceof MoveTicket){
-					return MoveTicket.instance(Colour.Black, Ticket.Secret, ((MoveTicket) bestMove).target);
-				}else if(bestMove instanceof MoveDouble){
-					return MoveDouble.instance(Colour.Black, MoveTicket.instance(Colour.Black, Ticket.Secret, ((MoveDouble) bestMove).move1.target), ((MoveDouble) bestMove).move2);
+				
+				
+				if(taxi && bus && underground && Tickets.get(Colour.Black).get(Ticket.Secret)>0){
+					if(bestMove instanceof MoveTicket){
+						System.out.println("Move Secrefied");
+						return MoveTicket.instance(Colour.Black, Ticket.Secret, ((MoveTicket) bestMove).target);
+					}else if(bestMove instanceof MoveDouble){
+						System.out.println("Move Secrefied");
+						return MoveDouble.instance(Colour.Black, MoveTicket.instance(Colour.Black, Ticket.Secret, ((MoveDouble) bestMove).move1.target), ((MoveDouble) bestMove).move2);
+					}
 				}
 			}
 			

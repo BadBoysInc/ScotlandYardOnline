@@ -198,10 +198,12 @@ public class ScotlandYardModelX{
         			moves.add(m);
         		}
         		//Add a secret ticket alternative for Mr. X.
+        		/*
         		if(hasTickets(Ticket.Secret, player, 1) && ((MoveTicket) m).ticket != Ticket.Secret && !playerPresent(e.other(location), player)){
         			MoveTicket secretm = MoveTicket.instance(player, Ticket.Secret, e.other(location));
         			moves.add(secretm);
         		}
+        		*/
         	}
         }
     	return moves;

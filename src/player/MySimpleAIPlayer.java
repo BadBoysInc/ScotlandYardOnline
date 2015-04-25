@@ -189,6 +189,30 @@ public class MySimpleAIPlayer implements Player{
 		try {
 			scoreInit();
 			
+			Set<Move> tmp = new HashSet<Move>(moves);
+			if(tickets.get(Ticket.Taxi)<2){
+				if(tickets.get(Ticket.Bus)<2){
+					for(Move m: tmp){
+						if(m instanceof MoveTicket){
+							if(!moveExists(((MoveTicket)m).target, Route.Underground)){
+								moves.remove(m);
+							}
+						}
+					}
+				}else{
+					for(Move m: tmp){
+						if(m instanceof MoveTicket){
+							if(!moveExists(((MoveTicket)m).target, Route.Bus)){
+								moves.remove(m);
+							}
+						}
+					}
+				}
+			}
+			
+			
+			
+			
 			int bestScore = Integer.MAX_VALUE;
 			Move bestMove = null;
 			int score = Integer.MAX_VALUE;
@@ -242,7 +266,7 @@ public class MySimpleAIPlayer implements Player{
 				bestMove = moves.iterator().next();
 			}
 			
-			if(Debug.printOutGeneral)System.out.println(bestMove);
+			if(Debug.printOutDetect)System.out.println(bestMove);
 			
 			return bestMove;
 			
@@ -254,5 +278,14 @@ public class MySimpleAIPlayer implements Player{
 		return moves.iterator().next();
 		
     }
+
+	private boolean moveExists(int node, Route underground) {
+		for(Edge e: graph.getEdges()){
+			if((e.target().equals(node) || e.source().equals(node)) && e.data().equals(underground)){
+				return true;
+			}
+		}
+		return false;
+	}
 
 }
