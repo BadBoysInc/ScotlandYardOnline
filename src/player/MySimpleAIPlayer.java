@@ -18,7 +18,6 @@ import scotlandyard.Route;
 import scotlandyard.ScotlandYardGraphReader;
 import scotlandyard.ScotlandYardView;
 import scotlandyard.Ticket;
-import solution.ScotlandYardModel;
 
 
 public class MySimpleAIPlayer implements Player{
@@ -190,7 +189,7 @@ public class MySimpleAIPlayer implements Player{
 		try {
 			scoreInit();
 			
-			int bestScore = 0;
+			int bestScore = Integer.MAX_VALUE;
 			Move bestMove = null;
 			int score = Integer.MAX_VALUE;
 			
@@ -231,19 +230,20 @@ public class MySimpleAIPlayer implements Player{
 				if(move instanceof MoveTicket)
 					score = score - (tickets.get(t)*ticketScale);
 				
-				//System.out.println(score+" ("+move + "( vs "+ bestScore+ " ("+bestMove+")");
+				
 				if(score<=bestScore){
 					bestScore = score;
 					bestMove = move;
 				}
-				//System.out.println(bestMove);
+				
 			}
 			
-			//System.out.println(bestMove);
 			if(bestMove== null){
-				System.out.println(score);
-				System.out.println(moves);
+				bestMove = moves.iterator().next();
 			}
+			
+			if(Debug.printOutGeneral)System.out.println(bestMove);
+			
 			return bestMove;
 			
 		} catch (IOException e) {

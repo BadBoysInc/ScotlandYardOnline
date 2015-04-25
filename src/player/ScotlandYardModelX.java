@@ -4,12 +4,10 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-import player.AIMrXPlayerFactory.PlayerType;
 import scotlandyard.Colour;
 import scotlandyard.Edge;
 import scotlandyard.Graph;
@@ -158,21 +156,6 @@ public class ScotlandYardModelX{
     	}
     }
     
-    //Find Mr. X's possible moves.
-    private Set<Integer> computePossibleLocations(Set<Integer> possibleLocations, Ticket ticket) {
-		Set<Integer> newPos = new HashSet<Integer>();
-		for(Integer location: possibleLocations){
-			for(Edge<Integer, Route> e: graph.getEdges()){
-				
-				if((e.source().equals(location)||e.target().equals(location))){
-		    		if((Ticket.fromRoute(e.data()) == ticket || ticket == Ticket.Secret) && !playerPresent(e.other(location), Colour.Black)){   			
-		    			newPos.add(e.other(location));
-		        	}
-				}
-	        }
-		}
-		return newPos;
-	}
 
 	//Creates a dummy ticket with Mr. X's last known location. 
     private MoveTicket getDummyTicket(MoveTicket move) {
@@ -185,7 +168,7 @@ public class ScotlandYardModelX{
         Set<MoveTicket> movesSingle = singleMoves(Locations.get(player), player);
         Set<Move> allMoves = new HashSet<Move>(movesSingle);
         //Adds double-moves to Mr.X's valid moves.
-        if(hasTickets(Ticket.Double, player, 1)){
+        if(hasTickets(Ticket.Double, player, 1) && false){
         	for(MoveTicket firstMove: movesSingle){
         		Set<MoveTicket> secondMoves = singleMoves(((MoveTicket)  firstMove).target, player);
         		for(MoveTicket secondMove: secondMoves){

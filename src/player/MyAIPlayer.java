@@ -4,19 +4,20 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Hashtable;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeSet;
 
 import scotlandyard.Colour;
 import scotlandyard.Edge;
-import scotlandyard.Graph;
 import scotlandyard.Move;
 import scotlandyard.MoveDouble;
 import scotlandyard.MoveTicket;
 import scotlandyard.Node;
 import scotlandyard.Player;
 import scotlandyard.Route;
-import scotlandyard.ScotlandYardGraphReader;
 import scotlandyard.ScotlandYardView;
 import scotlandyard.Ticket;
 
@@ -33,6 +34,13 @@ public class MyAIPlayer implements Player{
 	GraphDisplay graphDisplay;
 	ScotlandYardModelX model;
 	boolean loaded = false;
+	
+	//Varaiables.
+	int winningBonus = 1000;
+	int distanceFromDetectivesScale = 75;
+	int currentOptionsScale = 2;
+	int minDistanceScale = 500;
+	int positionScale = 1;
 	
 	public MyAIPlayer(ScotlandYardView view, String graphFilename) {
 		this.view = view;
@@ -111,13 +119,7 @@ public class MyAIPlayer implements Player{
 		
 		//getting number of valid moves
 		int MrXcurrentOptions = validMoves.size();
-		
-		
-		//Scaling factors
-		int distanceFromDetectivesScale = 75;
-		int currentOptionsScale = 2;
-		int minDistanceScale = 500;
-		int positionScale = 1;
+
 		
 		/*System.out.println(String.format("MOVE(%d) totdist: %d, mindist: %d, numMoves: %d, pos: %d",
 				mrX,
@@ -233,32 +235,39 @@ public class MyAIPlayer implements Player{
 
 	private Move MinMaxTree(int location, Set<Move> moves){
 		
-		HashMap<Move, Integer> MrXList = new HashMap<Move, Integer>();
+		HashMap<Move, Integer> MrXMoves = new HashMap<Move, Integer>();
 		
 		int savedRound = model.getRound();
 		
 		Set<Move> singlemoves = model.validMoves(Colour.Black);
 
 		if(model.isReady() && !model.isGameOver()){
+			
+			Integer bestChildScore = Integer.MIN_VALUE;
+			
 			for(Move MrXMove: singlemoves){
+				
+				if(Debug.printOutEndGame)System.out.println(MrXMove);
 				
 				model.setData(Tickets, Locations, Colour.Black, savedRound);
 				
 				model.turn(MrXMove);
 				
-				MrXList.put(MrXMove, minMaxCalc(2));
+				int score = minMaxCalc(4, bestChildScore, true);
 				
+				MrXMoves.put(MrXMove, score);
+				bestChildScore = Math.max(bestChildScore, score);
 			}	
 		}else{
 			System.out.println("ERROR: Game over");
 		}
 		
-		int bestScore = 0;
+		int bestScore = Integer.MIN_VALUE;
 		Move bestMove = null;
 		
-		for(Move m: MrXList.keySet()){
-			int score = MrXList.get(m);
-			if(score>bestScore){
+		for(Move m: MrXMoves.keySet()){
+			int score = MrXMoves.get(m);
+			if(score>=bestScore){
 				bestScore = score;
 				bestMove = m;
 			}
@@ -268,54 +277,116 @@ public class MyAIPlayer implements Player{
 		
 	}
 	
-	private int minMaxCalc(int level){
+	private int minMaxCalc(int level, Integer bestPreComputedSibling, boolean afterMrX){
 		
 		if(model.isGameOver()){
+			if(model.getWinningPlayers().contains(Colour.Black)){
+				if(Debug.printOutEndGame)System.out.println("Winning model");
+				return score(model.getLocations(), model.getNodes(), model.getEdges(), model.validMoves(Colour.Black)) + winningBonus;
+			}
+			if(Debug.printOutEndGame)System.out.println("Losing model.");
 			return 0;
-		}else{
+		}
 			
-			if(level == 0){
-				return score(model.getLocations(), model.getNodes(), model.getEdges(), model.validMoves(Colour.Black));
+		if(level == 0){
+			return score(model.getLocations(), model.getNodes(), model.getEdges(), model.validMoves(Colour.Black));
+		}
+		
+		
+		
+		HashMap<Colour, Integer> saveLocations = new HashMap<Colour, Integer>(model.getLocations());
+		
+		HashMap<Colour, Map<Ticket, Integer>> tmp = model.getTickets();
+		HashMap<Colour, Map<Ticket, Integer>> saveTickets = new HashMap<Colour, Map<Ticket, Integer>>();
+		for(Colour c: tmp.keySet()){
+			saveTickets.put(c, new HashMap<Ticket, Integer>(tmp.get(c)));
+		}
+		
+		Colour savedColour = model.getCurrentPlayer();
+		int savedRound = model.getRound();
+		
+		
+		Integer bestChildScore = 0;
+		Set<Move> set = model.validMoves(model.getCurrentPlayer());
+		
+		
+		if(model.getCurrentPlayer().equals(Colour.Black)){
+			
+			bestChildScore = Integer.MIN_VALUE;
+			
+			for(Move currentMove: set){
+				
+				model.setData(saveTickets, saveLocations, savedColour, savedRound);
+				
+				model.turn(currentMove);
+				if(Debug.printOutGeneral)System.out.println(printLevel(level));
+				int score = minMaxCalc(level-1, bestChildScore, true);
+				if(Debug.printOutGeneral)System.out.println(printLevel(level));
+
+				bestChildScore = Math.max(bestChildScore, score);
+				
+				boolean aphaBetaOptimise = false;
+				if(score>bestPreComputedSibling){
+					aphaBetaOptimise = true;
+					break;
+				}
+				
+				if(aphaBetaOptimise){
+					if(Debug.printOutGeneral)System.out.println("Optimised.");
+					break;
+				}else{
+					if(Debug.printOutGeneral)System.out.println("Could not optimise.");
+				}
 			}
+		}else if(afterMrX){
 			
+			bestChildScore = Integer.MAX_VALUE;
 			
-			
-			HashMap<Colour, Integer> saveLocations = new HashMap<Colour, Integer>(model.getLocations());
-			
-			HashMap<Colour, Map<Ticket, Integer>> tmp = model.getTickets();
-			HashMap<Colour, Map<Ticket, Integer>> saveTickets = new HashMap<Colour, Map<Ticket, Integer>>();
-			for(Colour c: tmp.keySet()){
-				saveTickets.put(c, new HashMap<Ticket, Integer>(tmp.get(c)));
-			}
-			
-			Colour savedColour = model.getCurrentPlayer();
-			int savedRound = model.getRound();
-			
-			Set<Integer> childScores = new HashSet<Integer>();
-			Set<Move> set = model.validMoves(model.getCurrentPlayer());
-			//System.out.println(set.size());
 			for(Move currentMove: set){
 				
 				model.setData(saveTickets, saveLocations, savedColour, savedRound);
 				
 				model.turn(currentMove);
 				
-				//String s = printLevel(level);
-				//System.out.println(s);
+				if(Debug.printOutGeneral)System.out.println(printLevel(level));
+				int score = minMaxCalc(level-1, bestChildScore, false);
+				if(Debug.printOutGeneral)System.out.println(printLevel(level));
+				bestChildScore = Math.min(bestChildScore, score);
 				
-				childScores.add(minMaxCalc(level-1));
+				boolean aphaBetaOptimise = false;
+				if(score<bestPreComputedSibling){
+					aphaBetaOptimise = true;
+					break;
+				}
 				
-				//System.out.println(s);
+				if(aphaBetaOptimise){
+					if(Debug.printOutGeneral)System.out.println(printLevel(level) +" Optimised.");
+					break;
+				}else{
+					if(Debug.printOutGeneral)System.out.println(printLevel(level) +" Could not optimise.");
+				}
+				
 			}
+		}else{
 			
-			if(model.getCurrentPlayer().equals(Colour.Black))
-				return max(childScores);
-			return min(childScores);
+			bestChildScore = Integer.MAX_VALUE;
 			
+			for(Move currentMove: set){
+				
+				model.setData(saveTickets, saveLocations, savedColour, savedRound);
+				model.turn(currentMove);
+				if(Debug.printOutGeneral)System.out.println(printLevel(level));
+				bestChildScore = Math.min(minMaxCalc(level-1, bestChildScore, false), bestChildScore);
+				if(Debug.printOutGeneral)System.out.println(printLevel(level));
+				
+			}
 		}
 		
+		return bestChildScore;
+			
+		
+		
 	}
-	
 	
 	private String printLevel(int l){
 		String s = "";
@@ -326,31 +397,6 @@ public class MyAIPlayer implements Player{
 		return s;
 	}
 	
-	private int max(Set<Integer> set) {
-		
-		int max = 0;
-		
-		for(Integer i: set){
-			if(i > max){
-				max = i;
-			}
-		}
-		
-		return max;
-	}
-
-	private int min(Set<Integer> set) {
-		
-		int min = Integer.MAX_VALUE;
-		
-		for(Integer i: set){
-			if(i < min){
-				min = i;
-			}
-		}
-		
-		return min;
-	}
 
 	@Override
     public Move notify(int location, Set<Move> moves) {
@@ -358,30 +404,14 @@ public class MyAIPlayer implements Player{
 		try {
 			scoreInit(location);
 			Locations.put(Colour.Black, location);
-			/* **This is a working wersion of 1 move look a head.
-			 * int bestScore = 0;
-			Move bestMove = null;
-					
-			for(Move move: moves){
-				int newLocation;
-				if(move instanceof MoveTicket){
-					newLocation = ((MoveTicket) move).target;
-				}else if(move instanceof MoveDouble){
-					newLocation = ((MoveDouble) move).move2.target;
-				}else if(move instanceof MovePass){
-					newLocation = location;
-				}else{
-					throw new Error("Move isn't real");
-				}
-				
-				int score = score(newLocation, detectives, graph.getNodes(), graph.getEdges(), Tickets);
-				if(score>bestScore){
-					bestScore = score;
-					bestMove = move;
-				}
+		
+			Set<Move> tmp = new HashSet<Move>(moves);
 			
+			for(Move m: tmp){
+				if(m instanceof MoveDouble){
+					moves.remove(m);
+				}
 			}
-			*/
 			
 			Move bestMove = MinMaxTree(location, moves);
 			
