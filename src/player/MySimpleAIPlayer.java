@@ -18,6 +18,7 @@ import scotlandyard.Route;
 import scotlandyard.ScotlandYardGraphReader;
 import scotlandyard.ScotlandYardView;
 import scotlandyard.Ticket;
+import solution.ScotlandYardModel;
 
 
 public class MySimpleAIPlayer implements Player{
@@ -28,6 +29,7 @@ public class MySimpleAIPlayer implements Player{
 	boolean DEBUG = false;
 	GraphDisplay graphDisplay;
 	HashMap<Ticket, Integer> tickets;
+	
 	
 	
 	public MySimpleAIPlayer(ScotlandYardView view, String graphFilename) {
@@ -62,6 +64,7 @@ public class MySimpleAIPlayer implements Player{
 		Integer mrX = view.getPlayerLocation(Colour.Black);
 		
 		if(mrX.equals(0)){
+			//System.out.println("mrX=0");
 			return 0;
 		}
 		
@@ -189,43 +192,58 @@ public class MySimpleAIPlayer implements Player{
 			
 			int bestScore = 0;
 			Move bestMove = null;
-					
+			int score = Integer.MAX_VALUE;
+			
 			for(Move move: moves){
 				int newLocation;
+				int ticketScale = 0;
+				
+				Ticket t = Ticket.Taxi; 
+				
 				if(move instanceof MoveTicket){
 					newLocation = ((MoveTicket) move).target;
+					
+					t = ((MoveTicket) move).ticket;
+					if(t.equals(Ticket.Underground)){
+						ticketScale = 300;
+					}else if(t.equals(Ticket.Bus)){
+						ticketScale = 150;
+					}else if(t.equals(Ticket.Taxi)){
+						ticketScale = 100;
+					}
+					
 				}else if(move instanceof MoveDouble){
 					newLocation = ((MoveDouble) move).move2.target;
 				}else if(move instanceof MovePass){
-					newLocation = location;
+					System.out.println("Move Pass!!!");
+					return move;
 				}else{
 					throw new Error("Move isn't real");
 				}
 				
-				Ticket t = ((MoveTicket) move).ticket;
-				int score = score(newLocation);
 				
-				int scale = 0;
-				if(t.equals(Ticket.Underground)){
-					scale = 300;
-				}else if(t.equals(Ticket.Bus)){
-					scale = 150;
-				}else if(t.equals(Ticket.Taxi)){
-					scale = 100;
-				}
+				score = score(newLocation);
+				
+				
+				
 					
 				
+				if(move instanceof MoveTicket)
+					score = score - (tickets.get(t)*ticketScale);
 				
-				score = score - (tickets.get(t)*scale);
-				
-				
-				if(score<bestScore){
+				//System.out.println(score+" ("+move + "( vs "+ bestScore+ " ("+bestMove+")");
+				if(score<=bestScore){
 					bestScore = score;
 					bestMove = move;
 				}
+				//System.out.println(bestMove);
 			}
 			
-			System.out.println(bestMove);
+			//System.out.println(bestMove);
+			if(bestMove== null){
+				System.out.println(score);
+				System.out.println(moves);
+			}
 			return bestMove;
 			
 		} catch (IOException e) {
