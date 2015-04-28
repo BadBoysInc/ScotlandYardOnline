@@ -1,20 +1,25 @@
 package player;
 
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Hashtable;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
 import scotlandyard.Colour;
 import scotlandyard.Edge;
+import scotlandyard.Graph;
 import scotlandyard.Move;
 import scotlandyard.MoveDouble;
 import scotlandyard.MoveTicket;
 import scotlandyard.Node;
 import scotlandyard.Player;
 import scotlandyard.Route;
+import scotlandyard.ScotlandYardGraphReader;
 import scotlandyard.ScotlandYardView;
 import scotlandyard.Ticket;
 
@@ -24,13 +29,16 @@ public class MyAIPlayer implements Player{
 
 	ScotlandYardView view;
 	String graphFilename;
-	Set<Integer> detectives;
-	Set<Colour> players;
-	HashMap<Colour, Map<Ticket, Integer>> Tickets;
-	HashMap<Colour, Integer> Locations;
+	List<Integer> detectives;
+	List<Colour> players;
+	Map<Colour, Map<Ticket, Integer>> Tickets;
+	Map<Colour, Integer> Locations;
 	GraphDisplay graphDisplay;
 	ScotlandYardModelX model;
 	boolean loaded = false;
+	
+	Set<Node<Integer>> nodes;
+	Set<Edge<Integer, Route>> edges;
 	
 	//Varaiables.
 	int winningBonus = 1000;
@@ -42,16 +50,26 @@ public class MyAIPlayer implements Player{
 	public MyAIPlayer(ScotlandYardView view, String graphFilename) {
 		this.view = view;
 		this.graphFilename = graphFilename;
+		try {
+			ScotlandYardGraphReader reader 	= new ScotlandYardGraphReader();
+			Graph<Integer, Route> graph;
+			graph = reader.readGraph(graphFilename);
+			nodes = new HashSet<Node<Integer>>(graph.getNodes());
+			edges = new HashSet<Edge<Integer, Route>>(graph.getEdges());
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+		
 	}
 	
 	void scoreInit(int mrX) throws IOException{
 			
-		model = new ScotlandYardModelX(view.getPlayers().size(), view.getRounds(), graphFilename);
+		model = new ScotlandYardModelX(view.getPlayers().size(), view.getRounds(), edges);
 		
 		//getting detective locations
-		detectives = new HashSet<Integer>();
-		Locations = new HashMap<Colour, Integer>();
-		players = new HashSet<Colour>();
+		detectives = new ArrayList<Integer>();
+		Locations = new EnumMap<Colour, Integer>(Colour.class);
 		Tickets = new HashMap<Colour, Map<Ticket, Integer>>();
 		
 		for(Colour c: view.getPlayers()){
@@ -74,7 +92,6 @@ public class MyAIPlayer implements Player{
 			Locations.put(c, location);
 			
 			
-			players.add(c);
 			model.join(null, c, location, Tickets.get(c));
 		}
 		
@@ -90,22 +107,22 @@ public class MyAIPlayer implements Player{
 	 * @param His valid moves 
 	 * @return Integer score of board, from distance to detectives and number of possible moves.
 	 */
-	private int score(HashMap<Colour, Integer> locations, Set<Node<Integer>> nodes, Set<Edge<Integer, Route>> edges, Set<Move> validMoves){
-		
+	private int score(EnumMap<Colour, Integer> enumMap, Set<Node<Integer>> nodes, Set<Edge<Integer, Route>> edges, Set<Move> set){
+		//System.out.println(enumMap +", "+validMoves);
 		//getting location
-		Integer mrX = locations.get(Colour.Black);
+		Integer mrX = enumMap.get(Colour.Black);
 		
 		
 		//getting distance to detectives
-		int totalDistanceToDetectives = 0;
-		Hashtable<Integer, Integer> detectiveDistances = breathfirstNodeSearch(mrX, detectives, nodes, edges);
+		double totalDistanceToDetectives = 0;
+		Hashtable<Integer, Double> detectiveDistances = breathfirstNodeSearch(mrX, enumMap, nodes, edges);
 		if(detectiveDistances != null){
 			for(Integer i: detectiveDistances.keySet()){
 				totalDistanceToDetectives += detectiveDistances.get(i);
 			}
 		}
 		
-		int minDistanceToDetectives = Integer.MAX_VALUE;
+		double minDistanceToDetectives = Integer.MAX_VALUE;
 		for(Integer i: detectiveDistances.keySet()){
 			minDistanceToDetectives = Math.min(detectiveDistances.get(i), minDistanceToDetectives);
 		}
@@ -115,9 +132,16 @@ public class MyAIPlayer implements Player{
 		
 		
 		//getting number of valid moves
-		int MrXcurrentOptions = validMoves.size();
+		int MrXcurrentOptions = set.size();
 		
-		return (distanceFromDetectivesScale*totalDistanceToDetectives + 
+		/*
+		System.out.println(String.format("%f, %d, %f, %d", distanceFromDetectivesScale*totalDistanceToDetectives,
+				currentOptionsScale*MrXcurrentOptions,
+				minDistanceScale*minDistanceToDetectives,
+				positionScale*positionOnBoard));
+		*/
+		
+		return (int) (distanceFromDetectivesScale*totalDistanceToDetectives + 
 				currentOptionsScale*MrXcurrentOptions + 
 				minDistanceScale*minDistanceToDetectives + 
 				positionScale*positionOnBoard);
@@ -130,25 +154,29 @@ public class MyAIPlayer implements Player{
 	 * @param graph 
 	 * @return total distance from Mr X to detectives.
 	 */
-	private Hashtable<Integer, Integer>  breathfirstNodeSearch(Integer mrX, Set<Integer> d, Set<Node<Integer>> nodes2, Set<Edge<Integer, Route>> edges2) {
+	private Hashtable<Integer, Double>  breathfirstNodeSearch(Integer mrX, EnumMap<Colour, Integer> locationMap, Set<Node<Integer>> nodes2, Set<Edge<Integer, Route>> edges2) {
 			
-			Set<Edge<Integer, Route>> edges = new HashSet<Edge<Integer, Route>>(edges2);
+			List<Edge<Integer, Route>> edges = new ArrayList<Edge<Integer, Route>>(edges2);
 			Set<Node<Integer>> nodes = new HashSet<Node<Integer>>(nodes2);
-			Set<Integer> detectives = new HashSet<Integer>(d);
+			Set<Integer> detectives = new HashSet<Integer>();
 			
-			
-			int currentDistance = 0;
+			for(Colour c: locationMap.keySet()){
+				if(!c.equals(Colour.Black))
+					detectives.add(locationMap.get(c));
+			}
+						
+			Double currentDistance = 0.0;
 			
 			//hash table of detective location against distance.
-			Hashtable<Integer, Integer> detectiveDistances = new Hashtable<Integer, Integer>();
+			Hashtable<Integer, Double> detectiveDistances = new Hashtable<Integer, Double>();
 			
 			//Initialise distance to maximum.
 			for(Integer i: detectives){
-				detectiveDistances.put(i, Integer.MAX_VALUE);
+				detectiveDistances.put(i, Double.MAX_VALUE);
 			}
 			
 			//Start at Mr X location.
-			Set<Node<Integer>> currentNodes =  new HashSet<Node<Integer>>();
+			List<Node<Integer>> currentNodes =  new ArrayList<Node<Integer>>();
 			Node<Integer> mrXNode = findNode(mrX, nodes);
 			if(mrXNode == null){
 				System.err.println("Mr X not on valid location");
@@ -160,16 +188,16 @@ public class MyAIPlayer implements Player{
 			while(!detectives.isEmpty()){
 				
 				//Get nodes one step away.
-				Set<Node<Integer>> neighbours = getNeighbours(currentNodes, nodes, edges);
+				List<Node<Integer>> neighbours = getNeighbours(currentNodes, nodes, edges);
 				currentDistance++;
 				//Remove seen nodes.
 				nodes.remove(neighbours);
-				
+								
 				//If they are detective locations update the shortest distance.
 				for(Node<Integer> n: neighbours){
 					if(detectives.contains(n.data())){
 						if(currentDistance < detectiveDistances.get(n.data())){
-							detectiveDistances.put((Integer) n.data(), currentDistance);
+							detectiveDistances.put((Integer) n.data(), Math.log(currentDistance+1));
 							//Remove from detectives still to get.
 							detectives.remove(n.data());
 						}
@@ -190,14 +218,14 @@ public class MyAIPlayer implements Player{
 	 * @param Set of all edges
 	 * @return Set of neighbouring nodes to currentNodes
 	 */
-	private Set<Node<Integer>> getNeighbours(Set<Node<Integer>> currentNodes, Set<Node<Integer>> nodes, Set<Edge<Integer, Route>> edges) {
-		Set<Node<Integer>> neighbours = new HashSet<Node<Integer>>();
+	private List<Node<Integer>> getNeighbours(List<Node<Integer>> currentNodes, Set<Node<Integer>> nodes2, List<Edge<Integer, Route>> edges) {
+		List<Node<Integer>> neighbours = new ArrayList<Node<Integer>>();
 		for(Edge<Integer, Route> e: edges){
 			for(Node<Integer> currentNode: currentNodes){
 				//check if current edge is connected to current node.
 				if(e.source().equals(currentNode.data()) || e.target().equals(currentNode.data()) ){
 					//If node is still to be reached (Ie. still in "nodes") add to neighbour set.
-					Node<Integer> n = findNode((Integer) e.other((Integer) currentNode.data()), nodes);
+					Node<Integer> n = findNode((Integer) e.other((Integer) currentNode.data()), nodes2);
 					if(n != null){
 						neighbours.add(n);
 					}
@@ -212,8 +240,8 @@ public class MyAIPlayer implements Player{
 	 * @param Set of nodes
 	 * @return Node from set with matching data, null if none match.
 	 */
-	private Node<Integer> findNode(Integer i, Set<Node<Integer>> nodes) {
-		for(Node<Integer> node: nodes){
+	private Node<Integer> findNode(Integer i, Set<Node<Integer>> nodes2) {
+		for(Node<Integer> node: nodes2){
 			if(node.data().equals(i)){
 				return node;
 			}
@@ -221,7 +249,7 @@ public class MyAIPlayer implements Player{
 		return null;
 	}
 
-	private Move MinMaxTree(int location, Set<Move> moves){
+	private Move MinMaxTree(int location){
 		
 		HashMap<Move, Integer> MrXMoves = new HashMap<Move, Integer>();
 		
@@ -270,22 +298,22 @@ public class MyAIPlayer implements Player{
 		if(model.isGameOver()){
 			if(model.getWinningPlayers().contains(Colour.Black)){
 				if(Debug.printOutEndGame)System.out.println("Winning model");
-				return score(model.getLocations(), model.getNodes(), model.getEdges(), model.validMoves(Colour.Black)) + winningBonus;
+				return score(model.getLocations(), nodes, edges, model.validMoves(Colour.Black)) + winningBonus;
 			}
 			if(Debug.printOutEndGame)System.out.println("Losing model.");
 			return 0;
 		}
 			
 		if(level == 0){
-			return score(model.getLocations(), model.getNodes(), model.getEdges(), model.validMoves(Colour.Black));
+			return score(model.getLocations(), nodes, edges, model.validMoves(Colour.Black));
 		}
 		
 		
 		
-		HashMap<Colour, Integer> saveLocations = new HashMap<Colour, Integer>(model.getLocations());
+		EnumMap<Colour, Integer> saveLocations = new EnumMap<Colour, Integer>(model.getLocations());
 		
-		HashMap<Colour, Map<Ticket, Integer>> tmp = model.getTickets();
-		HashMap<Colour, Map<Ticket, Integer>> saveTickets = new HashMap<Colour, Map<Ticket, Integer>>();
+		Map<Colour, Map<Ticket, Integer>> tmp = model.getTickets();
+		EnumMap<Colour, Map<Ticket, Integer>> saveTickets = new EnumMap<Colour, Map<Ticket, Integer>>(Colour.class);
 		for(Colour c: tmp.keySet()){
 			saveTickets.put(c, new HashMap<Ticket, Integer>(tmp.get(c)));
 		}
@@ -295,14 +323,14 @@ public class MyAIPlayer implements Player{
 		
 		
 		Integer bestChildScore = 0;
-		Set<Move> set = model.validMoves(model.getCurrentPlayer());
+		Set<Move> moves = model.validMoves(model.getCurrentPlayer());
 		
 		
 		if(model.getCurrentPlayer().equals(Colour.Black)){
 			
 			bestChildScore = Integer.MIN_VALUE;
 			
-			for(Move currentMove: set){
+			for(Move currentMove: moves){
 				
 				model.setData(saveTickets, saveLocations, savedColour, savedRound);
 				
@@ -312,8 +340,9 @@ public class MyAIPlayer implements Player{
 				if(Debug.printOutGeneral)System.out.println(printLevel(level));
 
 				bestChildScore = Math.max(bestChildScore, score);
-				
-				if(score>bestPreComputedSibling){
+
+				if(bestChildScore>bestPreComputedSibling){
+					if(Debug.printOutOptimise)System.out.println("Optimisation: Branch Pruned");
 					break;
 				}
 			}
@@ -321,7 +350,7 @@ public class MyAIPlayer implements Player{
 			
 			bestChildScore = Integer.MAX_VALUE;
 			
-			for(Move currentMove: set){
+			for(Move currentMove: moves){
 				
 				model.setData(saveTickets, saveLocations, savedColour, savedRound);
 				
@@ -333,7 +362,9 @@ public class MyAIPlayer implements Player{
 				
 				bestChildScore = Math.min(bestChildScore, score);
 				
-				if(score<bestPreComputedSibling){
+				
+				if(bestChildScore<bestPreComputedSibling){
+					if(Debug.printOutOptimise)System.out.println("Optimisation: Branch Pruned");
 					break;
 				}
 			}
@@ -341,7 +372,7 @@ public class MyAIPlayer implements Player{
 			
 			bestChildScore = Integer.MAX_VALUE;
 			
-			for(Move currentMove: set){
+			for(Move currentMove: moves){
 				
 				model.setData(saveTickets, saveLocations, savedColour, savedRound);
 				model.turn(currentMove);
@@ -374,7 +405,7 @@ public class MyAIPlayer implements Player{
 			scoreInit(location);
 			Locations.put(Colour.Black, location);
 		
-			Move bestMove = MinMaxTree(location, moves);
+			Move bestMove = MinMaxTree(location);
 						
 			System.out.println("Move Choosen: "+bestMove);
 			

@@ -2,15 +2,16 @@ package player;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
+import java.util.HashSet;
+import java.util.EnumMap;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.Map;
 import java.util.Set;
 
 import scotlandyard.Colour;
 import scotlandyard.Edge;
-import scotlandyard.Graph;
 import scotlandyard.Move;
 import scotlandyard.MoveDouble;
 import scotlandyard.MovePass;
@@ -18,7 +19,6 @@ import scotlandyard.MoveTicket;
 import scotlandyard.Node;
 import scotlandyard.Player;
 import scotlandyard.Route;
-import scotlandyard.ScotlandYardGraphReader;
 import scotlandyard.Spectator;
 import scotlandyard.Ticket;
 
@@ -28,11 +28,10 @@ public class ScotlandYardModelX{
 	
 	//Game Constants:
 	final private int numberOfDetectives;
-	final private Graph<Integer, Route> graph;
 	final private List<Boolean> rounds;
-	
+	Set<Edge<Integer, Route>> edges;
 	//Participants:
-	final private List<Spectator> spectators;
+	final private Set<Spectator> spectators;
 	
 	//Game Variables:
 	private int round;
@@ -40,37 +39,33 @@ public class ScotlandYardModelX{
 	private Colour currentPlayer;
 	int MrXsLastKnownLocation;
 	
-	//For Game Helper
-	private Set<Integer> mrXPossibleLocations;
-	
-	private HashMap<Colour, Map<Ticket, Integer>> Tickets;
-	private HashMap<Colour, Integer> Locations;
 	
 	
-    public ScotlandYardModelX(int numberOfDetectives, List<Boolean> rounds, String graphFileName) throws IOException {
-    	
-    	super();
-		
+	private Map<Colour, Map<Ticket, Integer>> Tickets;
+	private EnumMap<Colour, Integer> Locations;
+	
+	
+    public ScotlandYardModelX(int numberOfDetectives, List<Boolean> list, Set<Edge<Integer, Route>> edges2) throws IOException {
+    			
 		//Get the Graph from the Input File.
-    	ScotlandYardGraphReader reader 	= new ScotlandYardGraphReader();
-		graph = reader.readGraph(graphFileName);
+    	edges = edges2;
+		
 		
 		//Initialise Game Constants.
-		this.rounds = rounds;
+		this.rounds = list;
 		this.numberOfDetectives = numberOfDetectives;
 		
-		//Initialise Observer Lists.		
-		spectators = new ArrayList<Spectator>();
+		//Initialise Observer Sets.		
+		spectators = new HashSet<Spectator>();
 
 		//Initialise Game Variables.
 		MrXsLastKnownLocation = 0;
 		round = 0;
 		currentPlayer = Colour.Black;
 		
-		mrXPossibleLocations = new HashSet<Integer>();
 		players = new ArrayList<Colour>();
-		Locations = new HashMap<Colour, Integer>();
-		Tickets = new HashMap<Colour, Map<Ticket, Integer>>();
+		Locations = new EnumMap<Colour, Integer>(Colour.class);
+		Tickets = new EnumMap<Colour, Map<Ticket, Integer>>(Colour.class);
     }
 
     public void turn(Move move) {
@@ -78,7 +73,7 @@ public class ScotlandYardModelX{
         nextPlayer();
       }
     
-    //Changes currentPlayer to the next player in the ArrayList.
+    //Changes currentPlayer to the next player in the HashSet.
     private void nextPlayer() {
     	
     	int i = players.indexOf(currentPlayer); 
@@ -98,11 +93,6 @@ public class ScotlandYardModelX{
     //Changes the game-state to after a move has been played and notifies the spectators. 
     private void play(MoveTicket move) {
     	makeMove(move);
-    	if((move.colour != Colour.Black) || (getRounds().get(getRound()) == true)){
-    		notifySpectators(move);
-    	}else{
-    		notifySpectators(getDummyTicket(move));
-    	}
     }
         
     //Changes the game-state to after a double-move has been played and notifies the spectators.
@@ -113,12 +103,9 @@ public class ScotlandYardModelX{
     		dummy1 = getDummyTicket(move.move1);
     	if(getRounds().get(getRound()+2) != true)
     		dummy2 = getDummyTicket(move.move2);
-    	notifySpectators(MoveDouble.instance(move.colour, dummy1, dummy2));
     	
     	makeMove((MoveTicket)move.move1);
-    	notifySpectators(dummy1);
     	makeMove((MoveTicket)move.move2);
-    	notifySpectators(dummy2);
     	
     	Map<Ticket, Integer> tickets = Tickets.get(Colour.Black);
     	tickets.put(Ticket.Double, tickets.get(Ticket.Double)-1);
@@ -126,7 +113,6 @@ public class ScotlandYardModelX{
     
     //Notifies the spectators that nothing has changed.
     private void play(MovePass move) {
-    	notifySpectators(move);
     }
     
     //Changes the game-state to after a move has been played.
@@ -143,12 +129,6 @@ public class ScotlandYardModelX{
     		round = round + 1;
     		if(getRounds().get(getRound()) == true){
     			MrXsLastKnownLocation = Locations.get(Colour.Black);
-    			/*
-        		mrXPossibleLocations = new HashSet<Integer>();
-        		mrXPossibleLocations.add(MrXsLastKnownLocation);
-        		*/
-    		}else{
-    			//mrXPossibleLocations = computePossibleLocations(mrXPossibleLocations, move.ticket);
     		}
     		
     		
@@ -188,10 +168,10 @@ public class ScotlandYardModelX{
         return allMoves;
     }
     
-    //Returns the list of moves around the players current location.
+    //Returns the Set of moves around the players current location.
     private Set<MoveTicket> singleMoves(int location, Colour player) {
     	Set<MoveTicket> moves = new HashSet<MoveTicket>();
-    	for(Edge<Integer, Route> e: graph.getEdges()){	       	
+    	for(Edge<Integer, Route> e: edges){	       	
     		if(e.source()==location||e.target()==location){   			
     			MoveTicket m = MoveTicket.instance(player, Ticket.fromRoute(e.data()), e.other(location));
         		if(!playerPresent(e.other(location), player) && hasTickets(((MoveTicket) m).ticket, player, 1)){ 
@@ -222,13 +202,6 @@ public class ScotlandYardModelX{
     private boolean hasTickets(Ticket t, Colour player, int n) {
     	return (Tickets.get(player).get(t)) >= n;
     }
-    
-    //Notifies all spectators that a move has been made.
-    private void notifySpectators(Move move) {
-    	for(Spectator s: spectators){
-    		s.notify(move);
-    	}
-    }
 
     public boolean join(Player player, Colour colour, int location, Map<Ticket, Integer> tickets) {
     	
@@ -246,7 +219,7 @@ public class ScotlandYardModelX{
     	}
     }
     
-    //Gets a list of all the players in the game.
+    //Gets a Set of all the players in the game.
     public List<Colour> getPlayers() {
     	return players;
     }
@@ -357,7 +330,7 @@ public class ScotlandYardModelX{
         return round;
     }
 
-    //Returns a list of booleans relating to whether Mr. X reveals his location.
+    //Returns a Set of booleans relating to whether Mr. X reveals his location.
     public List<Boolean> getRounds() {
         return rounds;
     }
@@ -372,18 +345,13 @@ public class ScotlandYardModelX{
     	return MrXsLastKnownLocation;
     }
     
-    //Returns Mr.X's possible locations.
-    public Set<Integer> getMrXPossibleLocations(){
-    	return mrXPossibleLocations;
-    }
-
-	public void setData(HashMap<Colour, Map<Ticket, Integer>> tickets, HashMap<Colour, Integer> locations, Colour colour, int round){
-		Tickets = new HashMap<Colour, Map<Ticket, Integer>>();
+	public void setData(Map<Colour, Map<Ticket, Integer>> tickets, Map<Colour, Integer> locations, Colour colour, int round){
+		Tickets = new EnumMap<Colour, Map<Ticket, Integer>>(Colour.class);
 		for(Colour c: tickets.keySet()){
-			Tickets.put(c, new HashMap<Ticket, Integer>(tickets.get(c)));
+			Tickets.put(c, new EnumMap<Ticket, Integer>(tickets.get(c)));
 		}
 		
-		Locations = new HashMap<Colour, Integer>(locations);
+		Locations = new EnumMap<Colour, Integer>(locations);
 		currentPlayer = colour;
 		setRound(round);
 	}
@@ -396,21 +364,14 @@ public class ScotlandYardModelX{
 		round = r;
 	}
 	
-	public HashMap<Colour, Map<Ticket, Integer>> getTickets(){
+	public Map<Colour, Map<Ticket, Integer>> getTickets(){
 		return Tickets;
 	}
 	
-	public HashMap<Colour, Integer> getLocations(){
+	public EnumMap<Colour, Integer> getLocations(){
 		return Locations;
 	}
 	
-	public Set<Node<Integer>> getNodes(){
-		return graph.getNodes();
-	}
-	
-	public Set<Edge<Integer, Route>> getEdges(){
-		return graph.getEdges();
-	}
 	
 	
     
