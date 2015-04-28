@@ -3,15 +3,12 @@ package player;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.EnumMap;
-import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
-import com.sun.xml.internal.bind.v2.runtime.unmarshaller.XsiNilLoader.Array;
 
 import scotlandyard.Colour;
 import scotlandyard.Edge;
@@ -250,8 +247,8 @@ public class MyAIPlayer implements Player{
 		return null;
 	}
 
-	private Move MinMaxTree(int location, Set<Move> moves){
-		
+	private Move MinMaxTree(){
+		System.out.println("Old");
 		HashMap<Move, Integer> MrXMoves = new HashMap<Move, Integer>();
 		
 		int savedRound = model.getRound();
@@ -261,6 +258,8 @@ public class MyAIPlayer implements Player{
 		if(model.isReady() && !model.isGameOver()){
 			
 			Integer bestChildScore = Integer.MIN_VALUE;
+			
+			
 			
 			for(Move MrXMove: singlemoves){
 				
@@ -305,7 +304,7 @@ public class MyAIPlayer implements Player{
 			}
 			
 			if(Debug.printOutEndGame)System.out.println("Losing model.");
-			return score(model.getLocations(), nodes, edges, model.validMoves(Colour.Black)) - winningBonus;
+			return Integer.MIN_VALUE; //score(model.getLocations(), nodes, edges, model.validMoves(Colour.Black)) - winningBonus;
 		}
 			
 		if(level == 0){
@@ -366,7 +365,7 @@ public class MyAIPlayer implements Player{
 				
 				bestChildScore = Math.min(bestChildScore, score);
 				
-				if(score<bestPreComputedSibling){
+				if(score<bestPreComputedSibling || score == Integer.MIN_VALUE){
 					if(Debug.printOutOptimise)System.out.println("Pruned");
 					break;
 				}
@@ -393,7 +392,17 @@ public class MyAIPlayer implements Player{
 	
 	Move iterativeMinMaxHelper(){
 			
-			List<Move> mrXsMoves = model.validMoves(Colour.Black);
+		System.out.println("New");
+		
+		HashMap<Move, Integer> MrXMoves = new HashMap<Move, Integer>();
+		
+		int savedRound = model.getRound();
+		
+		List<Move> singlemoves = model.validMoves(Colour.Black);
+
+		if(model.isReady() && !model.isGameOver()){
+			
+			Integer bestChildScore = Integer.MIN_VALUE;
 			
 			List<List<Move>> detectiveMoves = Arrays.asList(
 					model.validMoves(Colour.Blue),
@@ -403,20 +412,145 @@ public class MyAIPlayer implements Player{
 					model.validMoves(Colour.Yellow)
 					);
 			
-			HashMap<Move, Integer> MrXMoves = new HashMap<Move, Integer>();
-			Integer bestChildScore = Integer.MIN_VALUE;
-
-			for(Move move: mrXsMoves){
+			
+			for(Move MrXMove: singlemoves){
 				
+				if(Debug.printOutEndGame)System.out.println("Analysing "+MrXMove);
 				
-				MrXMoves.put(move, min(1, bestChildScore, true));
-			}
+				model.setData(Tickets, Locations, Colour.Black, savedRound);
+				
+				model.turn(MrXMove);
+				
+				//get detective moves?;
+				
+				int score = min(5, bestChildScore, true, detectiveMoves);
+				
+				MrXMoves.put(MrXMove, score);
+				bestChildScore = Math.max(bestChildScore, score);
+			}	
+		}else{
+			System.out.println("ERROR: Game over");
+		}
 		
-		return null;
+		int bestScore = Integer.MIN_VALUE;
+		Move bestMove = null;
+		
+		for(Move m: MrXMoves.keySet()){
+			int score = MrXMoves.get(m);
+			if(score>=bestScore){
+				bestScore = score;
+				bestMove = m;
+			}
+		}
+		
+		return bestMove;
+		
+		
+		
+		
 	}
 	
+	int min(int level, Integer bestPreComputedSibling, boolean afterMrX, List<List<Move>> detectiveMoves){
+		
+		if(model.isGameOver()){
+			if(model.getWinningPlayers().contains(Colour.Black)){
+				if(Debug.printOutEndGame)System.out.println("Winning model");
+				return score(model.getLocations(), nodes, edges, model.validMoves(Colour.Black)) + winningBonus;
+			}
+			
+			if(Debug.printOutEndGame)System.out.println("Losing model.");
+			return Integer.MIN_VALUE;
+					//score(model.getLocations(), nodes, edges, model.validMoves(Colour.Black)) - winningBonus;
+		}
+			
+		if(level == 0){
+			return score(model.getLocations(), nodes, edges, model.validMoves(Colour.Black));
+		}
+		
+		
+		
+		EnumMap<Colour, Integer> saveLocations = new EnumMap<Colour, Integer>(model.getLocations());
+		
+		EnumMap<Colour, Map<Ticket, Integer>> tmp = model.getTickets();
+		EnumMap<Colour, Map<Ticket, Integer>> saveTickets = new EnumMap<Colour, Map<Ticket, Integer>>(Colour.class);
+		for(Colour c: tmp.keySet()){
+			saveTickets.put(c, new EnumMap<Ticket, Integer>(tmp.get(c)));
+		}
+		
+		Colour savedColour = model.getCurrentPlayer();
+		int savedRound = model.getRound();
+		
+		
+		Integer bestChildScore = 0;
+		int currentPlayer = model.getPlayers().indexOf(model.getCurrentPlayer());
+		List<Move> set = detectiveMoves.get(currentPlayer-1);
+		
+		
+		
+		if(afterMrX){
+			
+			bestChildScore = Integer.MAX_VALUE;
+			
+			for(Move currentMove: set){
+				System.out.println(currentMove);
+				model.setData(saveTickets, saveLocations, savedColour, savedRound);
+				
+				model.turn(currentMove);
+				
+				if(Debug.printOutGeneral)System.out.println(printLevel(level));
+				int score;
+				if(currentPlayer == model.numberOfDetectives-1){
+					 score = max(level-1, bestChildScore, false, detectiveMoves);
+				}else{
+					 score = min(level-1, bestChildScore, false, detectiveMoves);
+				}
+				
+				
+				if(Debug.printOutGeneral)System.out.println(printLevel(level));
+				
+				bestChildScore = Math.min(bestChildScore, score);
+				
+				if(score<bestPreComputedSibling || score == Integer.MIN_VALUE){
+					if(Debug.printOutOptimise)System.out.println("Pruned");
+					break;
+				}
+			}
+			
+		}else{
+			
+			bestChildScore = Integer.MAX_VALUE;
+			
+			for(Move currentMove: set){
+				
+				model.setData(saveTickets, saveLocations, savedColour, savedRound);
+				model.turn(currentMove);
+				if(Debug.printOutGeneral)System.out.println(printLevel(level));
+				
+				int score;
+				if(currentPlayer == model.numberOfDetectives-1){
+					 score = max(level-1, bestChildScore, false, detectiveMoves);
+				}else{
+					 score = min(level-1, bestChildScore, false, detectiveMoves);
+				}
+				
+				bestChildScore = Math.min(score, bestChildScore);
+				if(Debug.printOutGeneral)System.out.println(printLevel(level));
+				
+				if(score == Integer.MIN_VALUE){
+					if(Debug.printOutOptimise)System.out.println("Can't win");
+					break;
+				}
+				
+			}
+		}
+		
+		return bestChildScore;
+		
+		
+	}
 	
-	int min(int level, Integer bestPreComputedSibling, boolean afterMrX){
+	int max(int level, Integer bestPreComputedSibling, boolean b, List<List<Move>> detectiveMoves){
+
 		
 		
 		if(model.isGameOver()){
@@ -426,14 +560,21 @@ public class MyAIPlayer implements Player{
 			}
 			
 			if(Debug.printOutEndGame)System.out.println("Losing model.");
-			return score(model.getLocations(), nodes, edges, model.validMoves(Colour.Black)) - winningBonus;
+			return Integer.MIN_VALUE;
+					//score(model.getLocations(), nodes, edges, model.validMoves(Colour.Black)) - winningBonus;
 		}
 			
 		if(level == 0){
 			return score(model.getLocations(), nodes, edges, model.validMoves(Colour.Black));
 		}
 		
-		
+		detectiveMoves = Arrays.asList(
+				model.validMoves(Colour.Blue),
+				model.validMoves(Colour.Green),
+				model.validMoves(Colour.Red),
+				model.validMoves(Colour.White),
+				model.validMoves(Colour.Yellow)
+				);
 		
 		EnumMap<Colour, Integer> saveLocations = new EnumMap<Colour, Integer>(model.getLocations());
 		
@@ -461,7 +602,7 @@ public class MyAIPlayer implements Player{
 				
 				model.turn(currentMove);
 				if(Debug.printOutGeneral)System.out.println(printLevel(level));
-				int score = minMaxCalc(level-1, bestChildScore, true);
+				int score = min(level-1, bestChildScore, true, detectiveMoves);
 				if(Debug.printOutGeneral)System.out.println(printLevel(level));
 
 				bestChildScore = Math.max(bestChildScore, score);
@@ -471,103 +612,12 @@ public class MyAIPlayer implements Player{
 					break;
 				}
 			}
-		}else if(afterMrX){
-			
-			bestChildScore = Integer.MAX_VALUE;
-			
-			for(Move currentMove: set){
-				
-				model.setData(saveTickets, saveLocations, savedColour, savedRound);
-				
-				model.turn(currentMove);
-				
-				if(Debug.printOutGeneral)System.out.println(printLevel(level));
-				int score = minMaxCalc(level-1, bestChildScore, false);
-				if(Debug.printOutGeneral)System.out.println(printLevel(level));
-				
-				bestChildScore = Math.min(bestChildScore, score);
-				
-				if(score<bestPreComputedSibling){
-					if(Debug.printOutOptimise)System.out.println("Pruned");
-					break;
-				}
-			}
-		}else{
-			
-			bestChildScore = Integer.MAX_VALUE;
-			
-			for(Move currentMove: set){
-				
-				model.setData(saveTickets, saveLocations, savedColour, savedRound);
-				model.turn(currentMove);
-				if(Debug.printOutGeneral)System.out.println(printLevel(level));
-				bestChildScore = Math.min(minMaxCalc(level-1, bestChildScore, false), bestChildScore);
-				if(Debug.printOutGeneral)System.out.println(printLevel(level));
-				
-			}
 		}
-		
 		return bestChildScore;
-		
-		
+
 	}
 	
-	
-	
-	int iterativeMinMax(){
-		List<Move> mrXsMoves = model.validMoves(Colour.Black);
-		
-		EnumMap<Colour, Integer> saveLocations = new EnumMap<Colour, Integer>(model.getLocations());
-		
-		EnumMap<Colour, Map<Ticket, Integer>> tmp = model.getTickets();
-		EnumMap<Colour, Map<Ticket, Integer>> saveTickets = new EnumMap<Colour, Map<Ticket, Integer>>(Colour.class);
-		for(Colour c: tmp.keySet()){
-			saveTickets.put(c, new EnumMap<Ticket, Integer>(tmp.get(c)));
-		}
-		
-		Colour savedColour = model.getCurrentPlayer();
-		int savedRound = model.getRound();
-		
-		boolean foundLoss = false;
-		int minScore = 0;
-		
-		List<List<Move>> detectiveMoves = Arrays.asList(
-		model.validMoves(Colour.Blue),
-		model.validMoves(Colour.Green),
-		model.validMoves(Colour.Red),
-		model.validMoves(Colour.White),
-		model.validMoves(Colour.Yellow)
-		);
-		
-		
-		for(Move d1move: detectiveMoves.get(0)){
-			for(Move d2move: detectiveMoves.get(1)){
-				for(Move d3move: detectiveMoves.get(2)){
-					for(Move d4move: detectiveMoves.get(3)){
-						for(Move d5move: detectiveMoves.get(4)){
-							
-							
-							
-							int score = 1;
-							minScore = Math.min(minScore, score);
-							
-							if(score == 0){
-								foundLoss = true;
-								break;
-							}
-							if(foundLoss)break;
-						}
-						if(foundLoss)break;
-					}
-					if(foundLoss)break;
-				}
-				if(foundLoss)break;
-			}
-			if(foundLoss)break;
-		}
-		return minScore;
-		
-	}
+
 	
 	
 	private String printLevel(int l){
@@ -575,7 +625,7 @@ public class MyAIPlayer implements Player{
 		for(int x = 0; x<l;x++){
 			s = s + "\t";
 		}
-		s = s + "Level"+Integer.toString(l);
+		s = s + "Level "+Integer.toString(l);
 		return s;
 	}
 
@@ -586,8 +636,10 @@ public class MyAIPlayer implements Player{
 			scoreInit(location);
 			Locations.put(Colour.Black, location);
 		
-			Move bestMove = MinMaxTree(location, moves);
-						
+			Move bestMove = iterativeMinMaxHelper();
+			//Move bestMove = MinMaxTree();
+
+			
 			System.out.println("Move Choosen: "+bestMove);
 			
 			

@@ -28,7 +28,7 @@ import scotlandyard.Ticket;
 public class ScotlandYardModelX{
 	
 	//Game Constants:
-	final private int numberOfDetectives;
+	final int numberOfDetectives;
 	final private List<Boolean> rounds;
 	Set<Edge<Integer, Route>> edges;
 		
