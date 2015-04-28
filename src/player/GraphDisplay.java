@@ -12,7 +12,7 @@ public class GraphDisplay {
 	
 	Map<String, List<Integer>> coordinateMap;
 
-	GraphDisplay() {
+	public GraphDisplay() {
 
 		File file = new File("resources/pos.txt");	
 		Scanner in = null;
@@ -38,12 +38,12 @@ public class GraphDisplay {
 	}
 	
 	//Get the x pixel from a location.
-	int getX(int i){
+	public int getX(int i){
 		return coordinateMap.get(Integer.toString(i)).get(0);
 	}
 	
 	//Get the y pixel from a location.
-	int getY(int i){
+	public int getY(int i){
 		return coordinateMap.get(Integer.toString(i)).get(1);
 	}
 
