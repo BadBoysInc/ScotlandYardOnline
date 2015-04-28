@@ -29,16 +29,16 @@ public class AIMrXPlayerFactory implements PlayerFactory {
     String positionsFilename;
 
     protected List<Spectator> spectators;
-    GUI2 gui;
+    Gui gui;
 
     public AIMrXPlayerFactory() {
         typeMap = new HashMap<Colour, PlayerType>();
-        typeMap.put(Colour.Black, AIMrXPlayerFactory.PlayerType.Random);
-        typeMap.put(Colour.Blue, AIMrXPlayerFactory.PlayerType.GUI);
+        typeMap.put(Colour.Black, AIMrXPlayerFactory.PlayerType.XAI);
+        typeMap.put(Colour.Blue, AIMrXPlayerFactory.PlayerType.SimpAI);
         typeMap.put(Colour.Green, AIMrXPlayerFactory.PlayerType.SimpAI);
         typeMap.put(Colour.Red, AIMrXPlayerFactory.PlayerType.SimpAI);
         typeMap.put(Colour.White, AIMrXPlayerFactory.PlayerType.SimpAI);
-        typeMap.put(Colour.Yellow, AIMrXPlayerFactory.PlayerType.SimpAI);
+        typeMap.put(Colour.Yellow, AIMrXPlayerFactory.PlayerType.GUI);
 
         positionsFilename = "resources/pos.txt";
         imageFilename     = "resources/map.jpg";
@@ -89,11 +89,11 @@ public class AIMrXPlayerFactory implements PlayerFactory {
     }
 
 
-    private GUI2 gui(ScotlandYardView view) {
+    private Gui gui(ScotlandYardView view) {
         System.out.println("GUI");
         if (gui == null) {
 			try {
-				gui = new GUI2(view, imageFilename, positionsFilename);
+				gui = new Gui(view, imageFilename, positionsFilename);
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
