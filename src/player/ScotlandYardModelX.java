@@ -11,16 +11,12 @@ import java.util.Set;
 
 import scotlandyard.Colour;
 import scotlandyard.Edge;
-import scotlandyard.Graph;
 import scotlandyard.Move;
 import scotlandyard.MoveDouble;
 import scotlandyard.MovePass;
 import scotlandyard.MoveTicket;
-import scotlandyard.Node;
 import scotlandyard.Player;
 import scotlandyard.Route;
-import scotlandyard.ScotlandYardGraphReader;
-import scotlandyard.Spectator;
 import scotlandyard.Ticket;
 
 
