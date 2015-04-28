@@ -14,6 +14,10 @@ import java.util.Set;
 
 import javax.naming.TimeLimitExceededException;
 
+<<<<<<< HEAD
+
+=======
+>>>>>>> 870d8db13165e7c78dd21874a9465822fbe8793c
 import scotlandyard.Colour;
 import scotlandyard.Edge;
 import scotlandyard.Graph;
