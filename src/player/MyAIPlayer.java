@@ -1,7 +1,9 @@
 package player;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.EnumMap;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -9,6 +11,8 @@ import java.util.Hashtable;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+
+import javax.naming.TimeLimitExceededException;
 
 import scotlandyard.Colour;
 import scotlandyard.Edge;
@@ -37,14 +41,17 @@ public class MyAIPlayer implements Player{
 	ScotlandYardModelX model;
 	boolean loaded = false;
 	
-	Set<Edge<Integer, Route>> edges;
+	List<Edge<Integer, Route>> edges;
 	Set<Node<Integer>> nodes;
+	
+	long init;
+	Date time;
 	
 	//Varaiables.
 	int winningBonus = 1000;
-	int distanceFromDetectivesScale = 75;
+	int distanceFromDetectivesScale = 1;
 	int currentOptionsScale = 2;
-	int minDistanceScale = 500;
+	int minDistanceScale = 3;
 	int positionScale = 1;
 	
 	public MyAIPlayer(ScotlandYardView view, String graphFilename) {
@@ -54,7 +61,7 @@ public class MyAIPlayer implements Player{
 		ScotlandYardGraphReader r = new ScotlandYardGraphReader();
 		try {
 			Graph<Integer, Route> g = r.readGraph(graphFilename);
-			edges = g.getEdges();
+			edges = new ArrayList<Edge<Integer, Route>>(g.getEdges());
 			nodes = g.getNodes();
 			g = null;
 		} catch (IOException e) {
@@ -110,7 +117,7 @@ public class MyAIPlayer implements Player{
 	 * @param His valid moves 
 	 * @return Integer score of board, from distance to detectives and number of possible moves.
 	 */
-	private int score(EnumMap<Colour, Integer> locations, Set<Node<Integer>> nodes, Set<Edge<Integer, Route>> edges, List<Move> validMoves){
+	private int score(EnumMap<Colour, Integer> locations, Set<Node<Integer>> nodes, List<Edge<Integer, Route>> edges, int validMoves){
 		
 		//getting location
 		Integer mrX = locations.get(Colour.Black);
@@ -142,7 +149,8 @@ public class MyAIPlayer implements Player{
 		
 		
 		//getting number of valid moves
-		int MrXcurrentOptions = validMoves.size();
+		int MrXcurrentOptions = validMoves;
+		
 		
 		return (distanceFromDetectivesScale*totalDistanceToDetectives + 
 				currentOptionsScale*MrXcurrentOptions + 
@@ -157,9 +165,9 @@ public class MyAIPlayer implements Player{
 	 * @param graph 
 	 * @return total distance from Mr X to detectives.
 	 */
-	private Hashtable<Integer, Integer>  breathfirstNodeSearch(Integer mrX, Set<Integer> d, Set<Node<Integer>> nodes2, Set<Edge<Integer, Route>> edges2) {
+	private Hashtable<Integer, Integer>  breathfirstNodeSearch(Integer mrX, Set<Integer> d, Set<Node<Integer>> nodes2, List<Edge<Integer, Route>> edges2) {
 			
-			Set<Edge<Integer, Route>> edges = new HashSet<Edge<Integer, Route>>(edges2);
+			List<Edge<Integer, Route>> edges = new ArrayList<Edge<Integer, Route>>(edges2);
 			Set<Node<Integer>> nodes = new HashSet<Node<Integer>>(nodes2);
 			Set<Integer> detectives = new HashSet<Integer>(d);
 			
@@ -195,7 +203,10 @@ public class MyAIPlayer implements Player{
 				for(Node<Integer> n: neighbours){
 					if(detectives.contains(n.data())){
 						if(currentDistance < detectiveDistances.get(n.data())){
-							detectiveDistances.put((Integer) n.data(), currentDistance);
+							
+							int eq = (int) (Math.log(currentDistance)*500);
+							
+							detectiveDistances.put((Integer) n.data(), eq);
 							//Remove from detectives still to get.
 							detectives.remove(n.data());
 						}
@@ -216,7 +227,7 @@ public class MyAIPlayer implements Player{
 	 * @param Set of all edges
 	 * @return Set of neighbouring nodes to currentNodes
 	 */
-	private Set<Node<Integer>> getNeighbours(Set<Node<Integer>> currentNodes, Set<Node<Integer>> nodes, Set<Edge<Integer, Route>> edges) {
+	private Set<Node<Integer>> getNeighbours(Set<Node<Integer>> currentNodes, Set<Node<Integer>> nodes, List<Edge<Integer, Route>> edges) {
 		Set<Node<Integer>> neighbours = new HashSet<Node<Integer>>();
 		for(Edge<Integer, Route> e: edges){
 			for(Node<Integer> currentNode: currentNodes){
@@ -300,7 +311,7 @@ public class MyAIPlayer implements Player{
 		if(model.isGameOver()){
 			if(model.getWinningPlayers().contains(Colour.Black)){
 				if(Debug.printOutEndGame)System.out.println("Winning model");
-				return score(model.getLocations(), nodes, edges, model.validMoves(Colour.Black)) + winningBonus;
+				return score(model.getLocations(), nodes, edges, model.validMoves(Colour.Black).size()) + winningBonus;
 			}
 			
 			if(Debug.printOutEndGame)System.out.println("Losing model.");
@@ -308,7 +319,7 @@ public class MyAIPlayer implements Player{
 		}
 			
 		if(level == 0){
-			return score(model.getLocations(), nodes, edges, model.validMoves(Colour.Black));
+			return score(model.getLocations(), nodes, edges, model.validMoves(Colour.Black).size());
 		}
 		
 		
@@ -390,9 +401,9 @@ public class MyAIPlayer implements Player{
 	
 	
 	
-	Move iterativeMinMaxHelper(){
+	Move iterativeMinMaxHelper(int x) throws TimeLimitExceededException{
 			
-		System.out.println("New");
+		System.out.println("New "+ x);
 		
 		HashMap<Move, Integer> MrXMoves = new HashMap<Move, Integer>();
 		
@@ -404,13 +415,6 @@ public class MyAIPlayer implements Player{
 			
 			Integer bestChildScore = Integer.MIN_VALUE;
 			
-			List<List<Move>> detectiveMoves = Arrays.asList(
-					model.validMoves(Colour.Blue),
-					model.validMoves(Colour.Green),
-					model.validMoves(Colour.Red),
-					model.validMoves(Colour.White),
-					model.validMoves(Colour.Yellow)
-					);
 			
 			
 			for(Move MrXMove: singlemoves){
@@ -423,7 +427,7 @@ public class MyAIPlayer implements Player{
 				
 				//get detective moves?;
 				
-				int score = min(5, bestChildScore, true, detectiveMoves);
+				int score = min(x, bestChildScore, true);
 				
 				MrXMoves.put(MrXMove, score);
 				bestChildScore = Math.max(bestChildScore, score);
@@ -450,12 +454,12 @@ public class MyAIPlayer implements Player{
 		
 	}
 	
-	int min(int level, Integer bestPreComputedSibling, boolean afterMrX, List<List<Move>> detectiveMoves){
+	int min(int level, Integer bestPreComputedSibling, boolean afterMrX) throws TimeLimitExceededException{
 		
 		if(model.isGameOver()){
 			if(model.getWinningPlayers().contains(Colour.Black)){
 				if(Debug.printOutEndGame)System.out.println("Winning model");
-				return score(model.getLocations(), nodes, edges, model.validMoves(Colour.Black)) + winningBonus;
+				return score(model.getLocations(), nodes, edges, model.validMoves(Colour.Black).size()) + winningBonus;
 			}
 			
 			if(Debug.printOutEndGame)System.out.println("Losing model.");
@@ -464,7 +468,7 @@ public class MyAIPlayer implements Player{
 		}
 			
 		if(level == 0){
-			return score(model.getLocations(), nodes, edges, model.validMoves(Colour.Black));
+			return score(model.getLocations(), nodes, edges, model.validMoves(Colour.Black).size());
 		}
 		
 		
@@ -483,7 +487,7 @@ public class MyAIPlayer implements Player{
 		
 		Integer bestChildScore = 0;
 		int currentPlayer = model.getPlayers().indexOf(model.getCurrentPlayer());
-		List<Move> set = detectiveMoves.get(currentPlayer-1);
+		List<Move> set = oneLookAhead(model.validMoves(model.getCurrentPlayer()));
 		
 		
 		
@@ -492,7 +496,6 @@ public class MyAIPlayer implements Player{
 			bestChildScore = Integer.MAX_VALUE;
 			
 			for(Move currentMove: set){
-				System.out.println(currentMove);
 				model.setData(saveTickets, saveLocations, savedColour, savedRound);
 				
 				model.turn(currentMove);
@@ -500,9 +503,9 @@ public class MyAIPlayer implements Player{
 				if(Debug.printOutGeneral)System.out.println(printLevel(level));
 				int score;
 				if(currentPlayer == model.numberOfDetectives-1){
-					 score = max(level-1, bestChildScore, false, detectiveMoves);
+					 score = max(level-1, bestChildScore, false);
 				}else{
-					 score = min(level-1, bestChildScore, false, detectiveMoves);
+					 score = min(level-1, bestChildScore, false);
 				}
 				
 				
@@ -517,7 +520,9 @@ public class MyAIPlayer implements Player{
 			}
 			
 		}else{
-			
+			if(new Date().getTime()-init >14000){
+				throw new TimeLimitExceededException("");
+			}
 			bestChildScore = Integer.MAX_VALUE;
 			
 			for(Move currentMove: set){
@@ -528,9 +533,9 @@ public class MyAIPlayer implements Player{
 				
 				int score;
 				if(currentPlayer == model.numberOfDetectives-1){
-					 score = max(level-1, bestChildScore, false, detectiveMoves);
+					 score = max(level-1, bestChildScore, false);
 				}else{
-					 score = min(level-1, bestChildScore, false, detectiveMoves);
+					 score = min(level-1, bestChildScore, false);
 				}
 				
 				bestChildScore = Math.min(score, bestChildScore);
@@ -549,14 +554,12 @@ public class MyAIPlayer implements Player{
 		
 	}
 	
-	int max(int level, Integer bestPreComputedSibling, boolean b, List<List<Move>> detectiveMoves){
+	int max(int level, Integer bestPreComputedSibling, boolean b) throws TimeLimitExceededException{
 
-		
-		
 		if(model.isGameOver()){
 			if(model.getWinningPlayers().contains(Colour.Black)){
 				if(Debug.printOutEndGame)System.out.println("Winning model");
-				return score(model.getLocations(), nodes, edges, model.validMoves(Colour.Black)) + winningBonus;
+				return score(model.getLocations(), nodes, edges, model.validMoves(Colour.Black).size()) + winningBonus;
 			}
 			
 			if(Debug.printOutEndGame)System.out.println("Losing model.");
@@ -565,16 +568,9 @@ public class MyAIPlayer implements Player{
 		}
 			
 		if(level == 0){
-			return score(model.getLocations(), nodes, edges, model.validMoves(Colour.Black));
+			return score(model.getLocations(), nodes, edges, model.validMoves(Colour.Black).size());
 		}
 		
-		detectiveMoves = Arrays.asList(
-				model.validMoves(Colour.Blue),
-				model.validMoves(Colour.Green),
-				model.validMoves(Colour.Red),
-				model.validMoves(Colour.White),
-				model.validMoves(Colour.Yellow)
-				);
 		
 		EnumMap<Colour, Integer> saveLocations = new EnumMap<Colour, Integer>(model.getLocations());
 		
@@ -602,7 +598,7 @@ public class MyAIPlayer implements Player{
 				
 				model.turn(currentMove);
 				if(Debug.printOutGeneral)System.out.println(printLevel(level));
-				int score = min(level-1, bestChildScore, true, detectiveMoves);
+				int score = min(level-1, bestChildScore, true);
 				if(Debug.printOutGeneral)System.out.println(printLevel(level));
 
 				bestChildScore = Math.max(bestChildScore, score);
@@ -620,6 +616,18 @@ public class MyAIPlayer implements Player{
 
 	
 	
+	private List<Move> oneLookAhead(List<Move> validMoves) {
+		Move worstMove = null;
+		int worstScore = Integer.MIN_VALUE;
+		for(Move m: validMoves){
+			if(score(model.getLocations(), nodes, edges, 0)>worstScore){
+				worstMove = m;
+			}
+		}
+		validMoves.remove(worstMove);
+		return validMoves;
+	}
+
 	private String printLevel(int l){
 		String s = "";
 		for(int x = 0; x<l;x++){
@@ -629,18 +637,34 @@ public class MyAIPlayer implements Player{
 		return s;
 	}
 
+	
+	
 	@Override
     public Move notify(int location, Set<Move> moves) {
 
 		try {
 			scoreInit(location);
 			Locations.put(Colour.Black, location);
-		
-			Move bestMove = iterativeMinMaxHelper();
-			//Move bestMove = MinMaxTree();
+			Move bestMove = null;
+			time = new Date();
+			init = time.getTime();
+			int x = 4;
+			while(time.getTime()-init <10000 && x<6){
+				System.out.println("before try");
+				try {
+					bestMove = iterativeMinMaxHelper(x);
+				} catch (TimeLimitExceededException e) {
+					System.out.println(x + " failed using "+ (x-1));
+				}
+				x++;
+				//Move bestMove = MinMaxTree();
+			}
+			
 
 			
 			System.out.println("Move Choosen: "+bestMove);
+			
+			
 			
 			
 			

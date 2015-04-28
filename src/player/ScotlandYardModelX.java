@@ -30,7 +30,7 @@ public class ScotlandYardModelX{
 	//Game Constants:
 	final int numberOfDetectives;
 	final private List<Boolean> rounds;
-	Set<Edge<Integer, Route>> edges;
+	List<Edge<Integer, Route>> edges;
 		
 	//Game Variables:
 	private int round;
@@ -44,9 +44,9 @@ public class ScotlandYardModelX{
 	private EnumMap<Colour, Integer> Locations;
 	
 	
-    public ScotlandYardModelX(int numberOfDetectives, List<Boolean> rounds, Set<Edge<Integer, Route>> edges) throws IOException {
+    public ScotlandYardModelX(int numberOfDetectives, List<Boolean> rounds, List<Edge<Integer, Route>> edges2) throws IOException {
     		
-		this.edges = edges;
+		this.edges = edges2;
 		
 		//Initialise Game Constants.
 		this.rounds = rounds;
@@ -174,7 +174,7 @@ public class ScotlandYardModelX{
     private List<MoveTicket> singleMoves(int location, Colour player) {
     	List<MoveTicket> moves = new ArrayList<MoveTicket>();
     	for(Edge<Integer, Route> e: edges){	       	
-    		if(e.source()==location||e.target()==location){   			
+    		if(e.source()==location/*||e.target()==location*/){ 		
     			MoveTicket m = MoveTicket.instance(player, Ticket.fromRoute(e.data()), e.other(location));
         		if(!playerPresent(e.other(location), player) && hasTickets(((MoveTicket) m).ticket, player, 1)){ 
         			moves.add(m);
