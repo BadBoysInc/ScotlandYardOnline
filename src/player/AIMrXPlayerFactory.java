@@ -14,6 +14,7 @@ import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
 
 import net.PlayerFactory;
+import newgui.AIAssistedGUI;
 import newgui.PossibleMovesOverLay;
 import scotlandyard.Colour;
 import scotlandyard.Player;

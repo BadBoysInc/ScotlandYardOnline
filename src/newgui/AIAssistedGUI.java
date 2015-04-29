@@ -1,4 +1,4 @@
-package player;
+package newgui;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.io.IOException;
@@ -13,7 +13,8 @@ import javax.swing.JButton;
 
 
 
-import newgui.PossibleMovesOverLay;
+
+import player.ScoreBoard;
 import scotlandyard.Colour;
 import scotlandyard.Edge;
 import scotlandyard.Graph;
