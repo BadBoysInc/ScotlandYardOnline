@@ -27,11 +27,13 @@ import gui.Gui;
 @SuppressWarnings("serial")
 public class AIAssistedGUI extends Gui{
 	
-	int mrX;
 	List<Integer> possibleLocations;
 	ScotlandYardView view;
 	final private Graph<Integer, Route> graph;
 	Colour firstPlayer;
+	Move mrXMove;	
+	Ticket mrXT1;
+	Ticket mrXT2;
 	
 	public AIAssistedGUI(ScotlandYardView v, String imageFilename, String positionsFilename) throws IOException {
 		super(v, imageFilename, positionsFilename);
@@ -56,10 +58,9 @@ public class AIAssistedGUI extends Gui{
 		
 		view = v;
 		
-		mrX = v.getPlayerLocation(Colour.Black);
 		firstPlayer = null;
 		possibleLocations = new ArrayList<Integer>();
-		possibleLocations.add(mrX);
+		possibleLocations.add(0);
 		
 		ScotlandYardGraphReader reader 	= new ScotlandYardGraphReader();
 		graph = reader.readGraph("./resources/graph.txt/");
@@ -67,40 +68,52 @@ public class AIAssistedGUI extends Gui{
 	}
 
 	public Move notify(int location, Set<Move> moves){
-		Colour c = null;
-		for(Move m: moves){
-			if(m instanceof MoveTicket){
-				c = m.colour;
-				break;
-			}
-		}		
-		
-		if(firstPlayer == null)
-			firstPlayer = c;
-		
-		if(firstPlayer == c)
-			updateValidLocations();
-		
+		consoleAssist(moves);
 		return super.notify(location, moves);
+	}
+	
+	public void notify(Move move){
+		System.out.println(view.getRounds().get(view.getRound()-1));
+		if(move.colour == Colour.Black){
+			mrXMove = move;
+			if(move instanceof MoveTicket)
+				mrXT1 = ((MoveTicket) move).ticket;
+			else if(move instanceof MoveDouble){
+				mrXT1	= ((MoveDouble) move).move1.ticket;
+				mrXT2	= ((MoveDouble) move).move2.ticket;
+			}
+			if(mrXMove instanceof MoveDouble && view.getRounds().get(view.getRound()-1)){
+				mrXMove = ((MoveDouble) mrXMove).move2;
+				mrXT1 	= ((MoveDouble) mrXMove).move2.ticket;
+				possibleLocations = new ArrayList<Integer>();
+				possibleLocations.add(view.getPlayerLocation(Colour.Black));
+			}
+			if(view.getRounds().get(view.getRound())){
+				possibleLocations = new ArrayList<Integer>();
+				possibleLocations.add(view.getPlayerLocation(Colour.Black));
+			}else{
+				updateValidLocations();
+			}
+		}
+		super.notify(move);
 	}
 
 	private void updateValidLocations() {
-		if(view.getPlayerLocation(Colour.Black) != mrX){
-			mrX = view.getPlayerLocation(Colour.Black);
-			possibleLocations = new ArrayList<Integer>();
-			possibleLocations.add(mrX);
-		}else if(mrX != 0){
+		if(view.getPlayerLocation(Colour.Black) != 0){
 			List<Integer> newPossibleLocations = new ArrayList<Integer>();
 			for(Integer l: possibleLocations){
-				for(Move m: validMoves(l, Colour.Black))
-					if(m instanceof MoveTicket)
-						newPossibleLocations.add(((MoveTicket) m).target);
-					else if(m instanceof MoveDouble)
-						newPossibleLocations.add(((MoveDouble) m).move2.target);
+				for(Move m: validMoves(l, Colour.Black)){
+					if(mrXMove instanceof MoveTicket && m instanceof MoveTicket){
+						if(((MoveTicket) m).ticket == mrXT1 && !newPossibleLocations.contains(((MoveTicket) m).target))
+							newPossibleLocations.add(((MoveTicket) m).target);
+					}else if(mrXMove instanceof MoveDouble && m instanceof MoveDouble){
+						if(((MoveDouble) m).move1.ticket == mrXT1 && ((MoveDouble) m).move2.ticket == mrXT2 && !newPossibleLocations.contains(((MoveDouble) m).move2.target))
+							newPossibleLocations.add(((MoveDouble) m).move2.target);
+					}
+				}
 			}
 			possibleLocations = newPossibleLocations;
 		}
-		
 	}
 	
     //Returns the possible moves a player can make.
@@ -130,7 +143,7 @@ public class AIAssistedGUI extends Gui{
     private List<Move> singleMoves(int location, Colour player) {
     	List<Move> moves = new ArrayList<Move>();
     	for(Edge<Integer, Route> e: graph.getEdges()){	       	
-    		if(e.source()==location||e.target()==location){   			
+    		if(e.source()==location){   			
     			Move m = MoveTicket.instance(player, Ticket.fromRoute(e.data()), e.other(location));
         		if(!playerPresent(e.other(location), player) && hasTickets(((scotlandyard.MoveTicket) m).ticket, player, 1)){ 
         			moves.add(m);
@@ -159,7 +172,7 @@ public class AIAssistedGUI extends Gui{
     }
     
     private void consoleAssist(Set<Move> moves){
-    	
+    	System.out.println(possibleLocations);
     }
 	
 }
