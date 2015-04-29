@@ -41,7 +41,7 @@ public class AIMrXPlayerFactory implements PlayerFactory {
 
     public AIMrXPlayerFactory() {
         typeMap = new HashMap<Colour, PlayerType>();
-        typeMap.put(Colour.Black, AIMrXPlayerFactory.PlayerType.Random);
+        typeMap.put(Colour.Black, AIMrXPlayerFactory.PlayerType.XAI);
         typeMap.put(Colour.Blue, AIMrXPlayerFactory.PlayerType.GUI);
         typeMap.put(Colour.Green, AIMrXPlayerFactory.PlayerType.SimpAI);
         typeMap.put(Colour.Red, AIMrXPlayerFactory.PlayerType.SimpAI);
