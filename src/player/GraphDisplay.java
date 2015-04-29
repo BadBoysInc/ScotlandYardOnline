@@ -7,11 +7,14 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Scanner;
-
+/**
+ * @author Samuel
+ * Reads in from file ("resources/pos.txt") and holds the positions of each node on the graph
+ */
 public class GraphDisplay {
 	
 	Map<String, List<Integer>> coordinateMap;
-
+	
 	public GraphDisplay() {
 
 		File file = new File("resources/pos.txt");	
@@ -37,13 +40,18 @@ public class GraphDisplay {
         }
 	}
 	
-	//Get the x pixel from a location.
+	/**
+	 * @param Location Integer.
+	 * @return X coordinate integer on map.
+	 */
 	public int getX(int i){
 		return coordinateMap.get(Integer.toString(i)).get(0);
 	}
 	
-	//Get the y pixel from a location.
-	public int getY(int i){
+	/**
+	 * @param Location Integer.
+	 * @return Y coordinate integer on map.
+	 */	public int getY(int i){
 		return coordinateMap.get(Integer.toString(i)).get(1);
 	}
 

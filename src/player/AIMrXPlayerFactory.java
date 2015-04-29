@@ -56,7 +56,7 @@ public class AIMrXPlayerFactory implements PlayerFactory {
     }
 
     public AIMrXPlayerFactory(Map<Colour, PlayerType> typeMap, String imageFilename, String positionsFilename) {
-    	this();
+    	this.typeMap = typeMap;
         this.imageFilename = imageFilename;
         this.positionsFilename = positionsFilename;
         spectators = new ArrayList<Spectator>();

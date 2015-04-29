@@ -2,9 +2,10 @@ package player;
 
 import java.util.ArrayList;
 import java.util.EnumMap;
+import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Hashtable;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import scotlandyard.Colour;
@@ -18,13 +19,17 @@ public class ScoreBoard {
 	static int currentOptionsScale = 20;
 	static int minDistanceScale = 6;
 	static int positionScale = 3;
+	
 	static GraphDisplay graphDisplay = new GraphDisplay();
 
 	/**
-	 * @param Mr X's location 
-	 * @param His valid moves 
-	 * @return Integer score of board, from distance to detectives and number of possible moves.
+	 * @param Map of all colour players to their locations,
+	 * @param A Set holding the nodes of the graph,
+	 * @param A list holding the edges of the graph,
+	 * @param The number of valid moves at this location
+	 * @return Integer score of board, using distance to detectives, position on board and number of possible moves.
 	 */
+
 	public static int score(EnumMap<Colour, Integer> locations, Set<Node<Integer>> nodes, List<Edge<Integer, Route>> edges, int validMoves){
 		
 		//getting location
@@ -36,7 +41,7 @@ public class ScoreBoard {
 		
 		//getting distance to detectives
 		int totalDistanceToDetectives = 0;
-		Hashtable<Integer, Integer> detectiveDistances = breathfirstNodeSearch(mrX, detectivesPos, nodes, edges);
+		Map<Integer, Integer> detectiveDistances = breathfirstNodeSearch(mrX, detectivesPos, nodes, edges);
 		if(detectiveDistances != null)
 			for(Integer i: detectiveDistances.keySet())
 				totalDistanceToDetectives += detectiveDistances.get(i);
@@ -57,6 +62,10 @@ public class ScoreBoard {
 				positionScale*positionOnBoard);
 	}
 
+	/**
+	 * @param Map of all colour players to their locations,
+	 * @return A set holding the detective positions
+	 */
 	static Set<Integer> getDetectivePositions(EnumMap<Colour, Integer> locations) {
 		Set<Integer> detectivesPos = new HashSet<Integer>();
 		for(Colour c: locations.keySet()){
@@ -70,10 +79,11 @@ public class ScoreBoard {
 	/**
 	 * @param mrX location
 	 * @param detectives locations
-	 * @param graph 
-	 * @return total distance from Mr X to detectives.
+	 * @param A Set holding the nodes of the graph,
+	 * @param A list holding the edges of the graph,
+	 * @return A Map from detective location to distance from Mr X
 	 */
-	static Hashtable<Integer, Integer>  breathfirstNodeSearch(Integer mrX, Set<Integer> d, Set<Node<Integer>> nodes2, List<Edge<Integer, Route>> edges2) {
+	static Map<Integer, Integer>  breathfirstNodeSearch(Integer mrX, Set<Integer> d, Set<Node<Integer>> nodes2, List<Edge<Integer, Route>> edges2) {
 			
 			List<Edge<Integer, Route>> edges = new ArrayList<Edge<Integer, Route>>(edges2);
 			Set<Node<Integer>> nodes = new HashSet<Node<Integer>>(nodes2);
@@ -82,7 +92,7 @@ public class ScoreBoard {
 			int currentDistance = 0;
 			
 			//hash table of detective location against distance.
-			Hashtable<Integer, Integer> detectiveDistances = new Hashtable<Integer, Integer>();
+			Map<Integer, Integer> detectiveDistances = new HashMap<Integer, Integer>();
 			
 			//Initialise distance to maximum.
 			for(Integer i: detectives){
@@ -130,7 +140,7 @@ public class ScoreBoard {
 	/**
 	 * @param Set of currentNodes
 	 * @param Set of all not-reached nodes
-	 * @param Set of all edges
+	 * @param List of all edges
 	 * @return Set of neighbouring nodes to currentNodes
 	 */
 	static Set<Node<Integer>> getNeighbours(Set<Node<Integer>> currentNodes, Set<Node<Integer>> nodes, List<Edge<Integer, Route>> edges) {
@@ -164,6 +174,13 @@ public class ScoreBoard {
 		return null;
 	}
 	
+	/**
+	 * @param mrX location
+	 * @param detectives location
+	 * @param A Set holding the nodes of the graph,
+	 * @param A list holding the edges of the graph,
+	 * @return Integer of distance from Mr X to detective.
+	 */
 	static int pairBreathfirstNodeSearch(Integer mrX, Integer detect,	Set<Node<Integer>> nodes, List<Edge<Integer, Route>> edges) {
 		
 		if(mrX.equals(detect)){

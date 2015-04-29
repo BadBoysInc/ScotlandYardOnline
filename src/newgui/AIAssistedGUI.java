@@ -72,13 +72,17 @@ public class AIAssistedGUI extends Gui{
 		edges = new ArrayList<Edge<Integer, Route>>(graph.getEdges());
 	}
 	
-	//Asks to make a move.
+	/**
+	 * Called to ask for detective move to make.
+	 */
 	public Move notify(int location, Set<Move> moves){
 		consoleAssist(moves);
 		return super.notify(location, moves);
 	}
 	
-	//Tells spectator a move is made.
+	/**
+	 * Called as spectator whenever a move is made.
+	 */
 	public void notify(Move move){
 		if(move.colour.equals(Colour.Black) && view.getPlayerLocation(Colour.Black) != 0){
 			mrXMove = move;
@@ -99,7 +103,7 @@ public class AIAssistedGUI extends Gui{
 				possibleLocations.add(view.getPlayerLocation(Colour.Black));
 			}else{
 				System.out.println("got here");
-				updateValidLocations();
+				updatePossibleLocations();
 			}
 		}
 
@@ -107,8 +111,10 @@ public class AIAssistedGUI extends Gui{
 		super.notify(move);
 	}
 	
-	//Update the possible places MrX.
-	private void updateValidLocations() {
+	/**
+	 * Update the possible places MrX.
+	 */
+	private void updatePossibleLocations() {
 		if(view.getPlayerLocation(Colour.Black) != 0){
 			List<Integer> newPossibleLocations = new ArrayList<Integer>();
 			for(Integer l: possibleLocations){
@@ -126,7 +132,12 @@ public class AIAssistedGUI extends Gui{
 		}
 	}
 	
-    //Returns the possible moves a player can make.
+    /**
+     * Returns the possible moves a player can make.
+     * @param location
+     * @param player
+     * @return List of valid Moves
+     */
     protected List<Move> validMoves(int location, Colour player) {
     	//Adds all the moves around a players current location.
         List<Move> movesSingle = singleMoves(location, player);
@@ -148,7 +159,12 @@ public class AIAssistedGUI extends Gui{
         return moves;
     }
     
-    //Returns the list of moves around the players current location.
+    /**
+     * Returns the list of moves around the players current location.
+     * @param location
+     * @param player
+     * @return List of single moves
+     */
     private List<Move> singleMoves(int location, Colour player) {
     	List<Move> moves = new ArrayList<Move>();
     	for(Edge<Integer, Route> e: graph.getEdges()){	       	
@@ -167,12 +183,23 @@ public class AIAssistedGUI extends Gui{
     	return moves;
     }
 	
-    //Checks whether a player has n tickets of the specified type.
+    /**
+     * Checks whether a player has n tickets of the specified type.
+     * @param Ticket
+     * @param player
+     * @param number of tickets
+     * @return If the player has this number of these tickets 
+     */
     private boolean hasTickets(Ticket t, Colour player, int n) {
     	return (view.getPlayerTickets(player, t) >= n);
     }
     
-    //See's if a player is on a tile.
+    /**
+     * See's if a player is on a tile.
+     * @param location
+     * @param player
+     * @return If there is another player at the node that is not player.
+     */
     boolean playerPresent(int location, Colour player) {
     	for(Colour c: view.getPlayers()){
     		if((view.getPlayerLocation(c) == location) && (c != Colour.Black))
@@ -181,7 +208,10 @@ public class AIAssistedGUI extends Gui{
     	return false;
     }
     
-    //Talks to the overlay.
+    /**
+     * Talks to the overlay.
+     * @param Possible moves
+     */
     private void consoleAssist(Set<Move> moves){
     	if(view.getPlayerLocation(Colour.Black) != 0){
 
@@ -209,6 +239,12 @@ public class AIAssistedGUI extends Gui{
     	}
     }
 	
+    /**
+     * Get Map of detective colours to locations from view updated from parameters
+     * @param colour
+     * @param target
+     * @return
+     */
     private EnumMap<Colour, Integer> getLocations(Colour colour, int target){
     	EnumMap<Colour, Integer> map = new EnumMap<Colour, Integer>(Colour.class);
     	for(Colour c: view.getPlayers()){
