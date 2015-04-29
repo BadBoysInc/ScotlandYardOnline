@@ -14,10 +14,10 @@ import scotlandyard.Route;
 
 public class ScoreBoard {
 
-	static int distanceFromDetectivesScale = 1;
-	static int currentOptionsScale = 10;
-	static int minDistanceScale = 3;
-	static int positionScale = 1;
+	static int distanceFromDetectivesScale = 2;
+	static int currentOptionsScale = 20;
+	static int minDistanceScale = 6;
+	static int positionScale = 3;
 	static GraphDisplay graphDisplay = new GraphDisplay();
 
 	/**
