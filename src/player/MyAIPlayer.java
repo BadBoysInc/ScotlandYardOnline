@@ -127,24 +127,18 @@ public class MyAIPlayer implements Player{
 		
 		
 		
-		
 		//getting distance to detectives
 		int totalDistanceToDetectives = 0;
 		Hashtable<Integer, Integer> detectiveDistances = breathfirstNodeSearch(mrX, detectivesPos, nodes, edges);
-		if(detectiveDistances != null){
-			for(Integer i: detectiveDistances.keySet()){
+		if(detectiveDistances != null)
+			for(Integer i: detectiveDistances.keySet())
 				totalDistanceToDetectives += detectiveDistances.get(i);
-			}
-		}
 		
 		int minDistanceToDetectives = Integer.MAX_VALUE;
-		for(Integer i: detectiveDistances.keySet()){
+		for(Integer i: detectiveDistances.keySet())
 			minDistanceToDetectives = Math.min(detectiveDistances.get(i), minDistanceToDetectives);
-		}
-		
 		
 		int positionOnBoard = 509 - Math.abs(graphDisplay.getX(mrX) - 509) + 404 - Math.abs(graphDisplay.getY(mrX) - 404);
-		
 		
 		//getting number of valid moves
 		int MrXcurrentOptions = validMoves;
@@ -154,7 +148,6 @@ public class MyAIPlayer implements Player{
 				currentOptionsScale*MrXcurrentOptions + 
 				minDistanceScale*minDistanceToDetectives + 
 				positionScale*positionOnBoard);
-		
 	}
 
 	private Set<Integer> getDetectivePositions(EnumMap<Colour, Integer> locations) {

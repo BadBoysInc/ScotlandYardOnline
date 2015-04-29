@@ -60,12 +60,12 @@ public class GuiGame {
         String imageFilename     = "resources/map.jpg";
 
         Map<Colour, PlayerType> typeMap = new HashMap<Colour, PlayerType>();
-        typeMap.put(Colour.Black,  AIMrXPlayerFactory.PlayerType.Random);
-        typeMap.put(Colour.Blue,   AIMrXPlayerFactory.PlayerType.GUI);
-        typeMap.put(Colour.Green,  AIMrXPlayerFactory.PlayerType.Random);
-        typeMap.put(Colour.Red,    AIMrXPlayerFactory.PlayerType.Random);
-        typeMap.put(Colour.White,  AIMrXPlayerFactory.PlayerType.Random);
-        typeMap.put(Colour.Yellow, AIMrXPlayerFactory.PlayerType.Random);
+        typeMap.put(Colour.Black,  AIMrXPlayerFactory.PlayerType.XAI);
+        typeMap.put(Colour.Blue,   AIMrXPlayerFactory.PlayerType.SimpAI);
+        typeMap.put(Colour.Green,  AIMrXPlayerFactory.PlayerType.SimpAI);
+        typeMap.put(Colour.Red,    AIMrXPlayerFactory.PlayerType.SimpAI);
+        typeMap.put(Colour.White,  AIMrXPlayerFactory.PlayerType.SimpAI);
+        typeMap.put(Colour.Yellow, AIMrXPlayerFactory.PlayerType.SimpAI);
 
 
         Map<Ticket, Integer> mrXTickets = new HashMap<Ticket, Integer>();

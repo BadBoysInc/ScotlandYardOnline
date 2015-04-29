@@ -1,13 +1,6 @@
 package player;
 
 import gui.Gui;
-import net.PlayerFactory;
-import newgui.GUI2;
-import newgui.PossibleMovesOverLay;
-import scotlandyard.Colour;
-import scotlandyard.Player;
-import scotlandyard.ScotlandYardView;
-import scotlandyard.Spectator;
 
 import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
@@ -19,6 +12,13 @@ import java.util.Map;
 
 import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
+
+import net.PlayerFactory;
+import newgui.PossibleMovesOverLay;
+import scotlandyard.Colour;
+import scotlandyard.Player;
+import scotlandyard.ScotlandYardView;
+import scotlandyard.Spectator;
 
 /**
  * The RandomPlayerFactory is an example of a PlayerFactory that
@@ -35,13 +35,15 @@ public class AIMrXPlayerFactory implements PlayerFactory {
     String positionsFilename;
 
     protected List<Spectator> spectators;
-    Gui gui;
+
     PossibleMovesOverLay overlay;
+
+    AIAssistedGUI gui;
 
     public AIMrXPlayerFactory() {
         typeMap = new HashMap<Colour, PlayerType>();
-        typeMap.put(Colour.Black, AIMrXPlayerFactory.PlayerType.XAI);
-        typeMap.put(Colour.Blue, AIMrXPlayerFactory.PlayerType.SimpAI);
+        typeMap.put(Colour.Black, AIMrXPlayerFactory.PlayerType.Random);
+        typeMap.put(Colour.Blue, AIMrXPlayerFactory.PlayerType.GUI);
         typeMap.put(Colour.Green, AIMrXPlayerFactory.PlayerType.SimpAI);
         typeMap.put(Colour.Red, AIMrXPlayerFactory.PlayerType.SimpAI);
         typeMap.put(Colour.White, AIMrXPlayerFactory.PlayerType.SimpAI);
@@ -96,12 +98,15 @@ public class AIMrXPlayerFactory implements PlayerFactory {
     }
 
 
-    private Gui gui(ScotlandYardView view) {
+
+    private AIAssistedGUI gui(ScotlandYardView view) {
         System.out.println("GUI");
         if (gui == null) {
 			try {
-				gui = new Gui(view, imageFilename, positionsFilename);
+
 				makeOverlay();
+
+				gui = new AIAssistedGUI(view, imageFilename, positionsFilename);
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
