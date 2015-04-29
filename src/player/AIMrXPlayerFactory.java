@@ -103,15 +103,16 @@ public class AIMrXPlayerFactory implements PlayerFactory {
         System.out.println("GUI");
         if (gui == null) {
 			try {
-
-				makeOverlay();
-
+				JFrame.setDefaultLookAndFeelDecorated(true);
 				gui = new AIAssistedGUI(view, imageFilename, positionsFilename);
+				makeOverlay();
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
             spectators.add(gui);
+            spectators.add(overlay);
+            
 		}
         return gui;
     }
@@ -124,26 +125,23 @@ public class AIMrXPlayerFactory implements PlayerFactory {
 
 	        //If translucent windows aren't supported, exit.
 	        if (!gd.isWindowTranslucencySupported(GraphicsDevice.WindowTranslucency.TRANSLUCENT)) {
-	            System.err.println(
-	                "Translucency is not supported");
-	                System.exit(0);
-	        }
+	            
+	        }else{
 	        
-	        JFrame.setDefaultLookAndFeelDecorated(true);
-
-	        // Create the GUI on the event-dispatching thread
-	        SwingUtilities.invokeLater(new Runnable() {
-	            @Override
-	            public void run() {
-	            	overlay = new PossibleMovesOverLay();
-	            	
-	                // Set the window to 55% opaque (45% translucent).
-	                overlay.setOpacity(0.55f);
-
-	                // Display the window.
-	                overlay.setVisible(true);
-	            }
-	        });
+		        // Create the GUI on the event-dispatching thread
+		        SwingUtilities.invokeLater(new Runnable() {
+		            @Override
+		            public void run() {
+		            	overlay = new PossibleMovesOverLay();
+		            	
+		                // Set the window to 55% opaque (45% translucent).
+		                overlay.setOpacity(0.50f);
+		
+		                // Display the window.
+		                overlay.setVisible(true);
+		            }
+		        });
+	        }
 	}
 }
 

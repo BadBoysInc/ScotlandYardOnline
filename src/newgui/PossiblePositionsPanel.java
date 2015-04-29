@@ -13,13 +13,13 @@ import javax.swing.JPanel;
 
 import player.GraphDisplay;
 
-public class PossiblePositionsCanvas extends JPanel {
+public class PossiblePositionsPanel extends JPanel {
 
 	Image blackLocation;
 	Image background;
 	GraphDisplay position;
 	
-	PossiblePositionsCanvas() throws IOException{
+	PossiblePositionsPanel() throws IOException{
 		super();
 		blackLocation =  ImageIO.read(new File("resources/BlackLocation.png"));
 		background =  ImageIO.read(new File("resources/transparent.png"));
@@ -30,19 +30,12 @@ public class PossiblePositionsCanvas extends JPanel {
 	
 	
 	 @Override
-     public Dimension getPreferredSize() {
-         return new Dimension(1018, 809);
-     }
-	
-	 @Override
      protected void paintComponent(Graphics g) {
         super.paintComponent(g);
-         
-        Set<Integer> pos = new HashSet<Integer>();
-        pos.add(new Integer(1));
-         
         
-        for(Integer i: pos){
+        g.drawImage(background, 0, 0, null);
+        
+        for(Integer i: PossibleMovesOverLay.pos){
 			g.drawImage(blackLocation, position.getX(i) - 18, position.getY(i) - 18, null);
 		}
      }
