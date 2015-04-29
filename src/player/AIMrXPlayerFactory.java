@@ -36,7 +36,6 @@ public class AIMrXPlayerFactory implements PlayerFactory {
 
     protected List<Spectator> spectators;
 
-    PossibleMovesOverLay overlay;
 
     AIAssistedGUI gui;
 
@@ -104,44 +103,55 @@ public class AIMrXPlayerFactory implements PlayerFactory {
         if (gui == null) {
 			try {
 				JFrame.setDefaultLookAndFeelDecorated(true);
-				gui = new AIAssistedGUI(view, imageFilename, positionsFilename);
-				makeOverlay();
+				
+				gui = new AIAssistedGUI(view, imageFilename, positionsFilename, makeOverlay());
+				
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
             spectators.add(gui);
-            spectators.add(overlay);
+            
             
 		}
         return gui;
     }
-
-	private void makeOverlay() {
+    public PossibleMovesOverLay overlay;
+	private PossibleMovesOverLay makeOverlay() {
 			
 		
 		GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
-	        GraphicsDevice gd = ge.getDefaultScreenDevice();
+        GraphicsDevice gd = ge.getDefaultScreenDevice();
 
-	        //If translucent windows aren't supported, exit.
-	        if (!gd.isWindowTranslucencySupported(GraphicsDevice.WindowTranslucency.TRANSLUCENT)) {
-	            
-	        }else{
+        //If translucent windows aren't supported, exit.
+        if (!gd.isWindowTranslucencySupported(GraphicsDevice.WindowTranslucency.TRANSLUCENT)) {
+            System.out.println("failed");
+        }else{
+        
+	        // Create the GUI on the event-dispatching thread
+	        Thread over = new Thread() {
+	            @Override
+	            public void run() {
+	            	overlay = new PossibleMovesOverLay();
+
+	            	// Set the window to 55% opaque (45% translucent).
+	                overlay.setOpacity(0.50f);
+	
+	                // Display the window.
+	                overlay.setVisible(true);
+	            }
+	        };
 	        
-		        // Create the GUI on the event-dispatching thread
-		        SwingUtilities.invokeLater(new Runnable() {
-		            @Override
-		            public void run() {
-		            	overlay = new PossibleMovesOverLay();
-		            	
-		                // Set the window to 55% opaque (45% translucent).
-		                overlay.setOpacity(0.50f);
-		
-		                // Display the window.
-		                overlay.setVisible(true);
-		            }
-		        });
-	        }
+	        over.start();
+	        try {
+				over.join();
+			} catch (InterruptedException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+	        
+        }
+        return overlay;
 	}
 }
 

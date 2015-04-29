@@ -10,6 +10,8 @@ import java.util.Set;
 import javax.swing.JButton;
 
 
+
+import newgui.PossibleMovesOverLay;
 import scotlandyard.Colour;
 import scotlandyard.Edge;
 import scotlandyard.Graph;
@@ -34,8 +36,9 @@ public class AIAssistedGUI extends Gui{
 	Move mrXMove;	
 	Ticket mrXT1;
 	Ticket mrXT2;
+	PossibleMovesOverLay overlay;
 	
-	public AIAssistedGUI(ScotlandYardView v, String imageFilename, String positionsFilename) throws IOException {
+	public AIAssistedGUI(ScotlandYardView v, String imageFilename, String positionsFilename, PossibleMovesOverLay overlay) throws IOException {
 		super(v, imageFilename, positionsFilename);
 		setDefaultCloseOperation(EXIT_ON_CLOSE);
 		
@@ -60,8 +63,11 @@ public class AIAssistedGUI extends Gui{
 		
 		firstPlayer = null;
 		possibleLocations = new ArrayList<Integer>();
-		possibleLocations.add(0);
-		
+		if(overlay == null){
+			System.out.println("null");
+		}
+			
+		this.overlay = overlay;
 		ScotlandYardGraphReader reader 	= new ScotlandYardGraphReader();
 		graph = reader.readGraph("./resources/graph.txt/");
 		
@@ -172,6 +178,7 @@ public class AIAssistedGUI extends Gui{
     
     private void consoleAssist(Set<Move> moves){
     	System.out.println(possibleLocations);
+    	overlay.updatePositions(possibleLocations);
     }
 	
 }

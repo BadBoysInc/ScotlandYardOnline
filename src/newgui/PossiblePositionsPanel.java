@@ -34,7 +34,6 @@ public class PossiblePositionsPanel extends JPanel {
         super.paintComponent(g);
         
         g.drawImage(background, 0, 0, null);
-        
         for(Integer i: PossibleMovesOverLay.pos){
 			g.drawImage(blackLocation, position.getX(i) - 18, position.getY(i) - 18, null);
 		}
