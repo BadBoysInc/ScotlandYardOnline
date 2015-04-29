@@ -3,11 +3,13 @@ import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.EnumMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
 import javax.swing.JButton;
+
 
 
 
@@ -32,6 +34,7 @@ public class AIAssistedGUI extends Gui{
 	List<Integer> possibleLocations;
 	ScotlandYardView view;
 	final private Graph<Integer, Route> graph;
+	List<Edge<Integer, Route>> edges;
 	Colour firstPlayer;
 	Move mrXMove;	
 	Ticket mrXT1;
@@ -59,18 +62,13 @@ public class AIAssistedGUI extends Gui{
 			public void windowDeactivated(WindowEvent e) {}
         });
 		
-		view = v;
-		
+		view = v;	
 		firstPlayer = null;
-		possibleLocations = new ArrayList<Integer>();
-		if(overlay == null){
-			System.out.println("null");
-		}
-			
+		possibleLocations = new ArrayList<Integer>();			
 		this.overlay = overlay;
 		ScotlandYardGraphReader reader 	= new ScotlandYardGraphReader();
 		graph = reader.readGraph("./resources/graph.txt/");
-		
+		edges = new ArrayList<Edge<Integer, Route>>(graph.getEdges());
 	}
 
 	public Move notify(int location, Set<Move> moves){
@@ -178,7 +176,28 @@ public class AIAssistedGUI extends Gui{
     
     private void consoleAssist(Set<Move> moves){
     	System.out.println(possibleLocations);
-    	overlay.updatePositions(possibleLocations);
+    	int suggestedMove = 0;
+    	int bestScore = Integer.MIN_VALUE;
+    	for(Move m: moves){
+    		int score = ScoreBoard.score(getLocations(), graph.getNodes(), edges, 0);
+    		if(score > bestScore){
+    			bestScore = score;
+    			if(m instanceof MoveTicket){
+        			suggestedMove = ((MoveTicket) m).target;
+    			}else if(m instanceof MoveDouble){
+        			suggestedMove = ((MoveDouble) m).move2.target;
+    			}
+    		}
+    			
+    	}
+    	overlay.updatePositions(possibleLocations, suggestedMove);
     }
 	
+    private EnumMap<Colour, Integer> getLocations(){
+    	EnumMap<Colour, Integer> map = new EnumMap<Colour, Integer>(Colour.class);
+    	for(Colour c: view.getPlayers()){
+    		map.put(c, view.getPlayerLocation(c));
+    	}
+    	return map;
+    }
 }

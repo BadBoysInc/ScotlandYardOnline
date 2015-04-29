@@ -6,9 +6,12 @@ import java.util.List;
 
 import javax.swing.JFrame;
 
+import scotlandyard.Move;
+
 public class PossibleMovesOverLay extends JFrame{
 
 	static List<Integer> pos;
+	static int recommendedMove;
 		
 	public PossibleMovesOverLay(){
 		super();
@@ -29,15 +32,9 @@ public class PossibleMovesOverLay extends JFrame{
 		this.setVisible(true);
 	}
 
-	
-    
-	public void updatePositions(List<Integer> possibleLocations){
-	
-		System.out.println("Notified");
-		
+	public void updatePositions(List<Integer> possibleLocations, int bestMove) {
 		pos = possibleLocations;
-		
-		
+		recommendedMove = bestMove;
 	}	
 	
 	
