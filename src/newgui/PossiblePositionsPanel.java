@@ -35,7 +35,9 @@ public class PossiblePositionsPanel extends JPanel {
         
         g.drawImage(background, 0, 0, null);
         int x = PossibleMovesOverLay.recommendedMove;
-        g.drawImage(suggested, position.getX(x) - 35, position.getY(x) - 35, null);
+        if(x != 0){
+        	g.drawImage(suggested, position.getX(x) - 35, position.getY(x) - 35, null);
+        }
         
         for(Integer i: PossibleMovesOverLay.pos){
 			g.drawImage(blackLocation, position.getX(i) - 18, position.getY(i) - 18, null);

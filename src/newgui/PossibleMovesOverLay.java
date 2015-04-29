@@ -10,8 +10,8 @@ import scotlandyard.Move;
 
 public class PossibleMovesOverLay extends JFrame{
 
-	static List<Integer> pos;
-	static int recommendedMove;
+	static List<Integer> pos = null;
+	static int recommendedMove = 0;
 		
 	public PossibleMovesOverLay(){
 		super();
@@ -20,8 +20,6 @@ public class PossibleMovesOverLay extends JFrame{
 		setLocation(280, 0);
 		try {
 			pos = new ArrayList<Integer>();
-			pos.add(new Integer(1));
-			pos.add(new Integer(88));
 			add(new PossiblePositionsPanel());
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -32,8 +30,19 @@ public class PossibleMovesOverLay extends JFrame{
 		this.setVisible(true);
 	}
 
-	public void updatePositions(List<Integer> possibleLocations, int bestMove) {
+	
+	public void clear(){
+		recommendedMove = 0;
+	}
+    
+	public void updatePositions(List<Integer> possibleLocations){
 		pos = possibleLocations;
+	}
+
+
+
+	public void updatePositions(List<Integer> possibleLocations, int bestMove) {
+		updatePositions(possibleLocations);
 		recommendedMove = bestMove;
 	}	
 	

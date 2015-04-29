@@ -98,6 +98,7 @@ public class AIAssistedGUI extends Gui{
 				updateValidLocations();
 			}
 		}
+		overlay.clear();
 		super.notify(move);
 	}
 
@@ -175,28 +176,40 @@ public class AIAssistedGUI extends Gui{
     }
     
     private void consoleAssist(Set<Move> moves){
-    	System.out.println(possibleLocations);
-    	int suggestedMove = 0;
-    	int bestScore = Integer.MIN_VALUE;
-    	for(Move m: moves){
-    		int score = ScoreBoard.score(getLocations(), graph.getNodes(), edges, 0);
-    		if(score > bestScore){
-    			bestScore = score;
-    			if(m instanceof MoveTicket){
-        			suggestedMove = ((MoveTicket) m).target;
-    			}else if(m instanceof MoveDouble){
-        			suggestedMove = ((MoveDouble) m).move2.target;
-    			}
-    		}
-    			
+    	if(view.getPlayerLocation(Colour.Black) != 0){
+
+	    	int suggestedMove = 1;
+	    	int bestScore = Integer.MAX_VALUE;
+	    	for(Move m: moves){
+	    		if(m instanceof MoveTicket){
+	    			int score = ScoreBoard.score(getLocations(m.colour, ((MoveTicket) m).target), graph.getNodes(), edges, 0);
+		    		if(score < bestScore){
+		    			bestScore = score;
+		    			suggestedMove = ((MoveTicket) m).target;
+		    		}
+	    		}else if(m instanceof MoveDouble){
+	    			int score = ScoreBoard.score(getLocations(m.colour, ((MoveDouble) m).move2.target), graph.getNodes(), edges, 0);
+		    		if(score < bestScore){
+		    			bestScore = score;
+		        		suggestedMove = ((MoveDouble) m).move2.target;
+		    		}
+	    		}	    			
+	    	}
+	    	overlay.updatePositions(possibleLocations, suggestedMove);
+    	}else{
+	    	overlay.updatePositions(possibleLocations);
+
     	}
-    	overlay.updatePositions(possibleLocations, suggestedMove);
     }
 	
-    private EnumMap<Colour, Integer> getLocations(){
+    private EnumMap<Colour, Integer> getLocations(Colour colour, int target){
     	EnumMap<Colour, Integer> map = new EnumMap<Colour, Integer>(Colour.class);
     	for(Colour c: view.getPlayers()){
-    		map.put(c, view.getPlayerLocation(c));
+    		if(c.equals(colour)){
+    			map.put(c, target);
+    		}else{
+        		map.put(c, view.getPlayerLocation(c));
+    		}
     	}
     	return map;
     }
