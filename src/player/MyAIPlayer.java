@@ -50,6 +50,10 @@ public class MyAIPlayer implements Player{
 	long init;
 	int winningBonus = 1000;
 
+	/**
+	 * @param Shared View
+	 * @param graphFilename
+	 */
 	public MyAIPlayer(ScotlandYardView view, String graphFilename) {
 		this.view = view;
 		this.graphFilename = graphFilename;
@@ -67,7 +71,11 @@ public class MyAIPlayer implements Player{
 		
 	}
 	
-	//Setup the model.
+	/**
+	 * Sets up the model
+	 * @param Mr X position
+	 * @throws IOException
+	 */
 	void setup(int mrX) throws IOException{
 		
 		model = new ScotlandYardModelX(view.getPlayers().size(), view.getRounds(), edges);
@@ -109,8 +117,13 @@ public class MyAIPlayer implements Player{
 				
 	}
 	
-	//
-	Move iterativeMinMaxHelper(int x) throws TimeLimitExceededException{
+	/**
+	 * Wrapper of min-max that matches the score to the moves and chooses the best.
+	 * @param Depth of search
+	 * @return The best move to take
+	 * @throws TimeLimitExceededException if 14 seconds has elapsed
+	 */
+	Move minMaxHelper(int x) throws TimeLimitExceededException{
 		
 		HashMap<Move, Integer> MrXMoves = new HashMap<Move, Integer>();
 		
@@ -164,9 +177,15 @@ public class MyAIPlayer implements Player{
 		return bestMove;
 	}
 	
+	/**
+	 * Min section of the min-max that picks the worst score for Mr X
+	 * @param current level
+	 * @param bestPreComputedSibling for Alpha Beta pruning
+	 * @param is the current detective after Mr X
+	 * @return worse score for Mr X
+	 * @throws TimeLimitExceededException if 14 seconds has elapsed
+	 */
 	int min(int level, Integer bestPreComputedSibling, boolean afterMrX) throws TimeLimitExceededException{
-		
-		
 		
 		if(model.isGameOver()){
 			if(model.getWinningPlayers().contains(Colour.Black)){
@@ -181,8 +200,8 @@ public class MyAIPlayer implements Player{
 		if(level == 0)
 			return ScoreBoard.score(model.getLocations(), nodes, edges, model.validMoves(Colour.Black, false).size());
 		
-		if(new Date().getTime()-init >14000)
-			throw new TimeLimitExceededException("");
+		//interrupts if the time limit has been reached.
+		checkTime();
 		
 		EnumMap<Colour, Integer> saveLocations = new EnumMap<Colour, Integer>(model.getLocations());
 		
@@ -210,7 +229,7 @@ public class MyAIPlayer implements Player{
 				if(Debug.printOutGeneral)System.out.println(printLevel(level));
 				int score;
 				if(currentPlayer == model.numberOfDetectives-1){
-					 score = max(level-1, bestChildScore, false);
+					 score = max(level-1, bestChildScore);
 				}else{
 					 score = min(level-1, bestChildScore, false);
 				}
@@ -238,7 +257,7 @@ public class MyAIPlayer implements Player{
 				
 				int score;
 				if(currentPlayer == model.numberOfDetectives-1){
-					 score = max(level-1, bestChildScore, false);
+					 score = max(level-1, bestChildScore);
 				}else{
 					 score = min(level-1, bestChildScore, false);
 				}
@@ -256,8 +275,16 @@ public class MyAIPlayer implements Player{
 		return bestChildScore;
 	}
 	
-	int max(int level, Integer bestPreComputedSibling, boolean b) throws TimeLimitExceededException{
-
+	/**
+	 * Max section of the min-max, that picks the best score for Mr X
+	 * @param current level
+	 * @param bestPreComputedSibling for Alpha Beta pruning
+	 * @param is the current detective after Mr X
+	 * @return Best score for Mr X
+	 * @throws TimeLimitExceededException if 14 seconds has elapsed
+	 */
+	int max(int level, Integer bestPreComputedSibling) throws TimeLimitExceededException{
+		
 		if(model.isGameOver()){
 			if(model.getWinningPlayers().contains(Colour.Black)){
 				if(Debug.printOutEndGame)System.out.println("Winning model");
@@ -269,6 +296,9 @@ public class MyAIPlayer implements Player{
 			
 		if(level == 0)
 			return ScoreBoard.score(model.getLocations(), nodes, edges, model.validMoves(Colour.Black, false).size());
+		
+		//interrupts if the time limit has been reached.
+		checkTime();
 		
 		EnumMap<Colour, Integer> saveLocations = new EnumMap<Colour, Integer>(model.getLocations());
 		
@@ -308,6 +338,20 @@ public class MyAIPlayer implements Player{
 		return bestChildScore;
 	}
 
+	/**
+	 * Throws exception if time since global variable init has reached 14 seconds.
+	 * @throws TimeLimitExceededException
+	 */
+	private void checkTime() throws TimeLimitExceededException {
+		if(new Date().getTime()-init >14000)
+			throw new TimeLimitExceededException("Time Limit Reached");
+	}
+
+	/**
+	 * Prunes out the bad moves the detectives wouldn't make, so we can go deeper in the game tree.
+	 * @param validMoves
+	 * @return a pruned version of valid moves.
+	 */
 	private List<Move> oneLookAhead(List<Move> validMoves) {
 		
 		Collections.sort(validMoves, new Comparator<Move>(){
@@ -344,6 +388,11 @@ public class MyAIPlayer implements Player{
 		return validMoves;	
 	}
 	
+	/**
+	 * Uses a simple Heuristic to score a detective's move.
+	 * @param location
+	 * @return score of 'location'
+	 */
 	private int simpleDetectiveScore(int location){
 		//getting location
 		Integer mrX = Locations.get(Colour.Black);
@@ -363,7 +412,11 @@ public class MyAIPlayer implements Player{
 		return (distanceFromDetectivesScale*totalDistanceToDetectives + ((int)positionScale*positionOnBoard));
 	}
 
-	
+	/**
+	 * For Debugging purposes, prints out the current level with tabbing to indicate level graphically
+	 * @param level
+	 * @return
+	 */
 	private String printLevel(int l){
 		String s = "";
 		for(int x = 0; x<l;x++){
@@ -373,6 +426,12 @@ public class MyAIPlayer implements Player{
 		return s;
 	}
 
+	/**
+	 * Called to ask, out of moves, which to make.
+	 * @param location
+	 * @param Set of possible moves to choose from.
+	 * @return Choosen move
+	 */
 	@Override
     public Move notify(int location, Set<Move> moves) {
 		System.out.println("Current MrX Location: "+location);
@@ -388,7 +447,7 @@ public class MyAIPlayer implements Player{
 			while(new Date().getTime()-init <13000){
 				System.out.println("Trying using "+x+" depth");
 				try {
-					bestMove = iterativeMinMaxHelper(x);
+					bestMove = minMaxHelper(x);
 				} catch (TimeLimitExceededException e) {
 					System.out.println(x + " failed, fall back to "+ (x-1));
 				}
@@ -416,7 +475,6 @@ public class MyAIPlayer implements Player{
 					}
 				}
 				
-				
 				if(taxi && bus && underground && Tickets.get(Colour.Black).get(Ticket.Secret)>0){
 					if(bestMove instanceof MoveTicket){
 						System.out.println("Move Secrefied");
@@ -435,13 +493,19 @@ public class MyAIPlayer implements Player{
 		return moves.iterator().next();
     }
 
+	/**
+	 * Really simple choice to fall back on if all else fails
+	 * @param Current location
+	 * @param Valid moves
+	 * @return best Move according to one look ahead.
+	 */
 	private Move oneMoveLookAhead(int location, Set<Move> moves) {
 		int bestScore = Integer.MAX_VALUE;
 		Move bestMove = null;
 		int score = Integer.MAX_VALUE;
 		
 		for(Move move: moves){
-			@SuppressWarnings("unused")
+			
 			int newLocation;
 			int ticketScale = 0;
 			
@@ -464,8 +528,10 @@ public class MyAIPlayer implements Player{
 			}else{
 				throw new Error("Move isn't real");
 			}
-				
-			score = ScoreBoard.score(model.getLocations(),nodes, edges, 0);
+			
+			EnumMap<Colour, Integer> tmp = model.getLocations();
+			tmp.put(move.colour, newLocation);
+			score = ScoreBoard.score(tmp,nodes, edges, 0);
 			
 			if(move instanceof MoveTicket)
 				score = score - (Tickets.get(Colour.Black).get(t)*ticketScale);

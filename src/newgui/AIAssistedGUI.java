@@ -41,7 +41,10 @@ public class AIAssistedGUI extends Gui{
 		
 		this.addWindowListener(new WindowListener() {
 			@Override
-			public void windowClosed(WindowEvent e) {System.exit(0);}
+			public void windowClosed(WindowEvent e) {
+				overlay.dispose();
+				System.exit(0);
+				}
 			@Override
 			public void windowOpened(WindowEvent e) {}
 			@Override
