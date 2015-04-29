@@ -41,6 +41,7 @@ public class MyAIPlayer implements Player{
 	GraphDisplay graphDisplay;
 	ScotlandYardModelX model;
 	boolean loaded = false;
+	boolean singleMovesAllFail;
 	
 	ScoreBoard score;
 	
@@ -114,12 +115,15 @@ public class MyAIPlayer implements Player{
 		model.setRound(view.getRound());
 		
 		graphDisplay = new GraphDisplay();
+		
+		singleMovesAllFail = false;
 				
 	}
 	
 	/**
 	 * Wrapper of min-max that matches the score to the moves and chooses the best.
 	 * @param Depth of search
+	 * @param If it has tried with single moves and all end up losing the game.
 	 * @return The best move to take
 	 * @throws TimeLimitExceededException if 14 seconds has elapsed
 	 */
@@ -141,7 +145,7 @@ public class MyAIPlayer implements Player{
 		}
 		
 		List<Move> singlemoves;
-		if(closeDetectives>2 || (closeDetectives>1 && view.getRounds().get(view.getRound()+2).equals(false))){
+		if(closeDetectives>2 || (closeDetectives>1 && view.getRounds().get(view.getRound()+2).equals(false)) || singleMovesAllFail){
 			singlemoves = model.validMoves(Colour.Black, true);
 		}else{
 			singlemoves = model.validMoves(Colour.Black, false);
@@ -172,6 +176,11 @@ public class MyAIPlayer implements Player{
 				bestScore = score;
 				bestMove = m;
 			}
+		}
+		
+		if(bestScore == Integer.MIN_VALUE && singleMovesAllFail == false){
+			singleMovesAllFail = true;
+			return minMaxHelper(x);
 		}
 		
 		return bestMove;
@@ -285,6 +294,9 @@ public class MyAIPlayer implements Player{
 	 */
 	int max(int level, Integer bestPreComputedSibling) throws TimeLimitExceededException{
 		
+		//interrupts if the time limit has been reached.
+				checkTime();
+		
 		if(model.isGameOver()){
 			if(model.getWinningPlayers().contains(Colour.Black)){
 				if(Debug.printOutEndGame)System.out.println("Winning model");
@@ -297,8 +309,7 @@ public class MyAIPlayer implements Player{
 		if(level == 0)
 			return ScoreBoard.score(model.getLocations(), nodes, edges, model.validMoves(Colour.Black, false).size());
 		
-		//interrupts if the time limit has been reached.
-		checkTime();
+		
 		
 		EnumMap<Colour, Integer> saveLocations = new EnumMap<Colour, Integer>(model.getLocations());
 		
@@ -434,6 +445,7 @@ public class MyAIPlayer implements Player{
 	 */
 	@Override
     public Move notify(int location, Set<Move> moves) {
+		init = new Date().getTime();
 		System.out.println("Current MrX Location: "+location);
 		
 		try {
@@ -441,10 +453,10 @@ public class MyAIPlayer implements Player{
 			Locations.put(Colour.Black, location);
 			System.out.println("Trying simple one move ahead");
 			Move bestMove = oneMoveLookAhead(location, moves);
-			init = new Date().getTime();
+			
 			
 			int x = 4;
-			while(new Date().getTime()-init <13000){
+			while(new Date().getTime()-init <12000){
 				System.out.println("Trying using "+x+" depth");
 				try {
 					bestMove = minMaxHelper(x);

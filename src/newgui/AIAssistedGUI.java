@@ -9,6 +9,8 @@ import java.util.EnumMap;
 import java.util.List;
 import java.util.Set;
 
+import javax.swing.SwingUtilities;
+
 import player.ScoreBoard;
 import scotlandyard.Colour;
 import scotlandyard.Edge;
@@ -97,13 +99,16 @@ public class AIAssistedGUI extends Gui{
 			if(view.getRounds().get(view.getRound())){
 				possibleLocations = new ArrayList<Integer>();
 				possibleLocations.add(view.getPlayerLocation(Colour.Black));
-			}else{
-				System.out.println("got here");
-				updatePossibleLocations();
+			}else{SwingUtilities.invokeLater(new Runnable(){
+				@Override
+				public void run() {
+					updatePossibleLocations();
+				}
+				
+			});
+				
 			}
 		}
-
-		overlay.clear();
 		super.notify(move);
 	}
 	

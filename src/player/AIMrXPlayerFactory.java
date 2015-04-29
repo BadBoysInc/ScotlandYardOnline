@@ -42,7 +42,7 @@ public class AIMrXPlayerFactory implements PlayerFactory {
     public AIMrXPlayerFactory() {
         typeMap = new HashMap<Colour, PlayerType>();
         typeMap.put(Colour.Black, AIMrXPlayerFactory.PlayerType.XAI);
-        typeMap.put(Colour.Blue, AIMrXPlayerFactory.PlayerType.GUI);
+        typeMap.put(Colour.Blue, AIMrXPlayerFactory.PlayerType.SimpAI);
         typeMap.put(Colour.Green, AIMrXPlayerFactory.PlayerType.SimpAI);
         typeMap.put(Colour.Red, AIMrXPlayerFactory.PlayerType.SimpAI);
         typeMap.put(Colour.White, AIMrXPlayerFactory.PlayerType.SimpAI);
@@ -55,7 +55,8 @@ public class AIMrXPlayerFactory implements PlayerFactory {
     }
 
     public AIMrXPlayerFactory(Map<Colour, PlayerType> typeMap, String imageFilename, String positionsFilename) {
-    	this.typeMap = typeMap;
+    	this();
+    	//this.typeMap = typeMap;
         this.imageFilename = imageFilename;
         this.positionsFilename = positionsFilename;
         spectators = new ArrayList<Spectator>();
