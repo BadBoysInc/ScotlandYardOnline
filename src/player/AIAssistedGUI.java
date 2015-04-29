@@ -1,4 +1,4 @@
-package newgui;
+package player;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.io.IOException;
@@ -9,7 +9,6 @@ import java.util.Set;
 
 import javax.swing.JButton;
 
-import player.ScotlandYardModelX;
 
 import scotlandyard.Colour;
 import scotlandyard.Edge;
@@ -26,14 +25,15 @@ import gui.Gui;
 
 
 @SuppressWarnings("serial")
-public class GUI2 extends Gui{
+public class AIAssistedGUI extends Gui{
 	
 	int mrX;
 	List<Integer> possibleLocations;
 	ScotlandYardView view;
 	final private Graph<Integer, Route> graph;
+	Colour firstPlayer;
 	
-	public GUI2(ScotlandYardView v, String imageFilename, String positionsFilename) throws IOException {
+	public AIAssistedGUI(ScotlandYardView v, String imageFilename, String positionsFilename) throws IOException {
 		super(v, imageFilename, positionsFilename);
 		setDefaultCloseOperation(EXIT_ON_CLOSE);
 		
@@ -57,17 +57,31 @@ public class GUI2 extends Gui{
 		view = v;
 		
 		mrX = v.getPlayerLocation(Colour.Black);
+		firstPlayer = null;
 		possibleLocations = new ArrayList<Integer>();
 		possibleLocations.add(mrX);
 		
 		ScotlandYardGraphReader reader 	= new ScotlandYardGraphReader();
-		graph = reader.readGraph("/resources/graph.txt/");
+		graph = reader.readGraph("./resources/graph.txt/");
 		
 	}
 
-	public void notify(Move move){
-		updateValidLocations();
-		super.notify(move);
+	public Move notify(int location, Set<Move> moves){
+		Colour c = null;
+		for(Move m: moves){
+			if(m instanceof MoveTicket){
+				c = m.colour;
+				break;
+			}
+		}		
+		
+		if(firstPlayer == null)
+			firstPlayer = c;
+		
+		if(firstPlayer == c)
+			updateValidLocations();
+		
+		return super.notify(location, moves);
 	}
 
 	private void updateValidLocations() {
@@ -78,21 +92,26 @@ public class GUI2 extends Gui{
 		}else if(mrX != 0){
 			List<Integer> newPossibleLocations = new ArrayList<Integer>();
 			for(Integer l: possibleLocations){
-				//newPossibleLocations.addAll(validMoves(Colour.Black));
+				for(Move m: validMoves(l, Colour.Black))
+					if(m instanceof MoveTicket)
+						newPossibleLocations.add(((MoveTicket) m).target);
+					else if(m instanceof MoveDouble)
+						newPossibleLocations.add(((MoveDouble) m).move2.target);
 			}
+			possibleLocations = newPossibleLocations;
 		}
 		
 	}
 	
     //Returns the possible moves a player can make.
-    protected List<Move> validMoves(Colour player) {
+    protected List<Move> validMoves(int location, Colour player) {
     	//Adds all the moves around a players current location.
-        List<Move> movesSingle = singleMoves(view.getPlayerLocation(player), player);
-        List<Move> moves = new ArrayList<scotlandyard.Move>(movesSingle);
+        List<Move> movesSingle = singleMoves(location, player);
+        List<Move> moves = new ArrayList<Move>(movesSingle);
         //Adds double-moves to Mr.X's valid moves.
         if(hasTickets(Ticket.Double, player, 1)){
         	for(Move m: movesSingle){
-        		List<scotlandyard.Move> doubleMoves = singleMoves(((MoveTicket)  m).target, player);
+        		List<Move> doubleMoves = singleMoves(((MoveTicket) m).target, player);
         		for(Move dm: doubleMoves){
         			if((((MoveTicket) dm).ticket == ((MoveTicket) m).ticket)){
         				if(hasTickets(((scotlandyard.MoveTicket) m).ticket, player, 2))
@@ -103,10 +122,7 @@ public class GUI2 extends Gui{
         		}
         	}
         }
-        //Adds a pass move if there is no possible moves.
-        if(moves.isEmpty() && player != Colour.Black)
-        	moves.add(MovePass.instance(player));
-     
+        
         return moves;
     }
     
@@ -140,6 +156,10 @@ public class GUI2 extends Gui{
     			return true;
     	}
     	return false;
+    }
+    
+    private void consoleAssist(Set<Move> moves){
+    	
     }
 	
 }
