@@ -73,8 +73,7 @@ public class AIAssistedGUI extends Gui{
 	}
 	
 	public void notify(Move move){
-		System.out.println(view.getRounds().get(view.getRound()-1));
-		if(move.colour == Colour.Black){
+		if(move.colour == Colour.Black && view.getPlayerLocation(Colour.Black) != 0){
 			mrXMove = move;
 			if(move instanceof MoveTicket)
 				mrXT1 = ((MoveTicket) move).ticket;
