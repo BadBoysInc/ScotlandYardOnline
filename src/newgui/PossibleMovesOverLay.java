@@ -8,6 +8,9 @@ import javax.swing.JFrame;
 
 import scotlandyard.Move;
 
+/**
+ * A Gui that indicates the possible locations of Mr X and the recommend moves for the detective.
+ */
 public class PossibleMovesOverLay extends JFrame{
 
 	static List<Integer> pos = null;
@@ -30,16 +33,26 @@ public class PossibleMovesOverLay extends JFrame{
 		this.setVisible(true);
 	}
 
-	
+	/**
+	 * Hides the last recommended location.
+	 */
 	public void clear(){
 		recommendedMove = 0;
 	}
     
+	/**
+	 * Updates the possible locations show to 'possibleLocations'
+	 * @param possibleLocations
+	 */
 	public void updatePositions(List<Integer> possibleLocations){
 		pos = possibleLocations;
 	}
 
-
+	/**
+	 * Updates the possible locations show to 'possibleLocations' and the recommended location to 'bestMove'
+	 * @param possibleLocations
+	 * @param bestMove
+	 */
 
 	public void updatePositions(List<Integer> possibleLocations, int bestMove) {
 		updatePositions(possibleLocations);

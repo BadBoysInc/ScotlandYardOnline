@@ -39,7 +39,9 @@ public class AIMrXPlayerFactory implements PlayerFactory {
 
 
     AIAssistedGUI gui;
-
+	/**
+	 * Sets default players and resources.
+	 */
     public AIMrXPlayerFactory() {
         typeMap = new HashMap<Colour, PlayerType>();
         typeMap.put(Colour.Black, AIMrXPlayerFactory.PlayerType.XAI);
@@ -62,7 +64,12 @@ public class AIMrXPlayerFactory implements PlayerFactory {
         spectators = new ArrayList<Spectator>();
     }
 
-    //Chooses player type.
+    /**
+     * Chooses player type according to global player map and colour.
+     * @param colour,
+     * @param Shared view
+     * @param map file name
+     */
 	@Override
     public Player player(Colour colour, ScotlandYardView view, String mapFilename) {
         switch (typeMap.get(colour)) {
@@ -79,13 +86,17 @@ public class AIMrXPlayerFactory implements PlayerFactory {
         }
     }
 
-	//Starts the Gui.
+	/**
+	 * Starts the Gui.
+	 */
     @Override
     public void ready() {
         if (gui != null) gui.run();
     }
     
-    //Gets the spectators from the view.
+    /**
+     * Adds the gui to the spectator list so it knows what moves have been made.
+     */
     @Override
     public List<Spectator> getSpectators(ScotlandYardView view) {
         List<Spectator> specs = new ArrayList<Spectator>();
@@ -93,13 +104,19 @@ public class AIMrXPlayerFactory implements PlayerFactory {
         return specs;
     }
     
-    //Finishes the Gui.
+    /**
+     * Finishes the Gui.
+     */
     @Override
     public void finish() {
         if (gui != null) gui.update();
     }
 
-    //Creates the AI assisted Gui.
+    /**
+     * Creates the AI assisted Gui.
+     * @param View with data in, common to all players.
+     * @return AIAssistedGUI to play moves with
+     */
     private AIAssistedGUI gui(ScotlandYardView view) {
         System.out.println("GUI");
         if (gui == null) {
@@ -119,18 +136,21 @@ public class AIMrXPlayerFactory implements PlayerFactory {
     }
 
     public PossibleMovesOverLay overlay;
+    /**
+     * Initialises the PossibleMovesOverLay and returns a reference to it. 
+     * @return PossibleMovesOverLay
+     */
 	private PossibleMovesOverLay makeOverlay() {
 			
-		
-		GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
-        GraphicsDevice gd = ge.getDefaultScreenDevice();
+		GraphicsEnvironment graphicsEnvironment = GraphicsEnvironment.getLocalGraphicsEnvironment();
+        GraphicsDevice graphicsDevice = graphicsEnvironment.getDefaultScreenDevice();
 
-        //If translucent windows aren't supported, exit.
-        if (!gd.isWindowTranslucencySupported(GraphicsDevice.WindowTranslucency.TRANSLUCENT)) {
+        //If translucent windows aren't supported print our failed.
+        if (!graphicsDevice.isWindowTranslucencySupported(GraphicsDevice.WindowTranslucency.TRANSLUCENT)) {
             System.out.println("failed");
         }else{
         
-	        // Create the GUI on the event-dispatching thread
+	        // Create the screen on a new thread
 	        Thread over = new Thread() {
 	            @Override
 	            public void run() {
@@ -146,6 +166,7 @@ public class AIMrXPlayerFactory implements PlayerFactory {
 	        
 	        over.start();
 	        try {
+	        	//wait until thread have finished
 				over.join();
 			} catch (InterruptedException e) {
 				// TODO Auto-generated catch block

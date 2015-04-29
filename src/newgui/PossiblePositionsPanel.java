@@ -1,18 +1,16 @@
 package newgui;
 
-import java.awt.Dimension;
 import java.awt.Graphics;
 import java.awt.Image;
 import java.io.File;
 import java.io.IOException;
-import java.util.HashSet;
-import java.util.Set;
-
 import javax.imageio.ImageIO;
 import javax.swing.JPanel;
-
 import player.GraphDisplay;
 
+/**
+ *A panel that is the size of the map, and uses PossibleMovesOverLay to show the position of of recommend moves and possible Mr X positions.
+ */
 public class PossiblePositionsPanel extends JPanel {
 
 	Image blackLocation, background, suggested;

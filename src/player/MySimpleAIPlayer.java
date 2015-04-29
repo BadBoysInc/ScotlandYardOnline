@@ -35,7 +35,10 @@ public class MySimpleAIPlayer implements Player{
 		this.view = view;
 		this.graphFilename = graphFilename;
 	}
-	
+	/**
+	 * Initialises tickets Map from view, and graph and GraphDisplay from file.
+	 * @throws IOException
+	 */
 	void scoreInit() throws IOException{
 		
 		tickets = new HashMap<Ticket, Integer>();
@@ -54,8 +57,7 @@ public class MySimpleAIPlayer implements Player{
 	
 	/**
 	 * @param Mr X's location 
-	 * @param His valid moves 
-	 * @return Integer score of board, from distance to detectives and number of possible moves.
+	 * @return Integer score of board, from distance to detectives.
 	 */
 	private int score(int location){
 		
@@ -63,7 +65,6 @@ public class MySimpleAIPlayer implements Player{
 		Integer mrX = view.getPlayerLocation(Colour.Black);
 		
 		if(mrX.equals(0)){
-			//System.out.println("mrX=0");
 			return 0;
 		}
 		
@@ -178,8 +179,11 @@ public class MySimpleAIPlayer implements Player{
 	}
 
 	
-	
-	@Override
+	/**
+	 * Called to ask out of the given moves, which to take.
+	 * @param int location
+	 * @param Set of valid moves
+	 */
     public Move notify(int location, Set<Move> moves) {
         //TODO: Some clever AI here ...
 
@@ -268,9 +272,15 @@ public class MySimpleAIPlayer implements Player{
 		
     }
 
-	private boolean moveExists(int node, Route underground) {
+    /**
+     * Checks if there is a edge connected to 'node' with data 'route'
+     * @param node
+     * @param underground
+     * @return True if edge found, False if not.
+     */
+	private boolean moveExists(int node, Route route) {
 		for(Edge e: graph.getEdges()){
-			if((e.target().equals(node) || e.source().equals(node)) && e.data().equals(underground)){
+			if((e.target().equals(node) || e.source().equals(node)) && e.data().equals(route)){
 				return true;
 			}
 		}
