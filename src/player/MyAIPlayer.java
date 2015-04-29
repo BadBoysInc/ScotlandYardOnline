@@ -43,18 +43,14 @@ public class MyAIPlayer implements Player{
 	ScotlandYardModelX model;
 	boolean loaded = false;
 	
+	ScoreBoard score;
+	
 	List<Edge<Integer, Route>> edges;
 	Set<Node<Integer>> nodes;
 	
 	long init;
-	
-	//Varaiables.
 	int winningBonus = 1000;
-	int distanceFromDetectivesScale = 1;
-	int currentOptionsScale = 10;
-	int minDistanceScale = 3;
-	int positionScale = 1;
-	
+
 	public MyAIPlayer(ScotlandYardView view, String graphFilename) {
 		this.view = view;
 		this.graphFilename = graphFilename;
@@ -72,8 +68,9 @@ public class MyAIPlayer implements Player{
 		
 	}
 	
-	void scoreInit(int mrX) throws IOException{
-			
+	
+	void setup(int mrX) throws IOException{
+		
 		model = new ScotlandYardModelX(view.getPlayers().size(), view.getRounds(), edges);
 		
 		//getting detective locations
@@ -113,291 +110,6 @@ public class MyAIPlayer implements Player{
 				
 	}
 	
-	/**
-	 * @param Mr X's location 
-	 * @param His valid moves 
-	 * @return Integer score of board, from distance to detectives and number of possible moves.
-	 */
-	private int score(EnumMap<Colour, Integer> locations, Set<Node<Integer>> nodes, List<Edge<Integer, Route>> edges, int validMoves){
-		
-		//getting location
-		Integer mrX = locations.get(Colour.Black);
-		
-		Set<Integer> detectivesPos = getDetectivePositions(locations);
-		
-		
-		
-		//getting distance to detectives
-		int totalDistanceToDetectives = 0;
-		Hashtable<Integer, Integer> detectiveDistances = breathfirstNodeSearch(mrX, detectivesPos, nodes, edges);
-		if(detectiveDistances != null)
-			for(Integer i: detectiveDistances.keySet())
-				totalDistanceToDetectives += detectiveDistances.get(i);
-		
-		int minDistanceToDetectives = Integer.MAX_VALUE;
-		for(Integer i: detectiveDistances.keySet())
-			minDistanceToDetectives = Math.min(detectiveDistances.get(i), minDistanceToDetectives);
-		
-		int positionOnBoard = 509 - Math.abs(graphDisplay.getX(mrX) - 509) + 404 - Math.abs(graphDisplay.getY(mrX) - 404);
-		
-		//getting number of valid moves
-		int MrXcurrentOptions = validMoves;
-		
-		
-		return (distanceFromDetectivesScale*totalDistanceToDetectives + 
-				currentOptionsScale*MrXcurrentOptions + 
-				minDistanceScale*minDistanceToDetectives + 
-				positionScale*positionOnBoard);
-	}
-
-	private Set<Integer> getDetectivePositions(EnumMap<Colour, Integer> locations) {
-		Set<Integer> detectivesPos = new HashSet<Integer>();
-		for(Colour c: locations.keySet()){
-			if(!c.equals(Colour.Black)){
-				detectivesPos.add(locations.get(c));
-			}
-		}
-		return detectivesPos;
-	}
-
-	/**
-	 * @param mrX location
-	 * @param detectives locations
-	 * @param graph 
-	 * @return total distance from Mr X to detectives.
-	 */
-	private Hashtable<Integer, Integer>  breathfirstNodeSearch(Integer mrX, Set<Integer> d, Set<Node<Integer>> nodes2, List<Edge<Integer, Route>> edges2) {
-			
-			List<Edge<Integer, Route>> edges = new ArrayList<Edge<Integer, Route>>(edges2);
-			Set<Node<Integer>> nodes = new HashSet<Node<Integer>>(nodes2);
-			Set<Integer> detectives = new HashSet<Integer>(d);
-			
-			
-			int currentDistance = 0;
-			
-			//hash table of detective location against distance.
-			Hashtable<Integer, Integer> detectiveDistances = new Hashtable<Integer, Integer>();
-			
-			//Initialise distance to maximum.
-			for(Integer i: detectives){
-				detectiveDistances.put(i, Integer.MAX_VALUE);
-			}
-			
-			//Start at Mr X location.
-			Set<Node<Integer>> currentNodes =  new HashSet<Node<Integer>>();
-			Node<Integer> mrXNode = findNode(mrX, nodes);
-			if(mrXNode == null){
-				System.err.println("Mr X not on valid location");
-			}
-			currentNodes.add(mrXNode);
-			//Remove visited Nodes.
-			nodes.remove(mrXNode);
-			//while there are detective still to reach.
-			while(!detectives.isEmpty()){
-				//Get nodes one step away.
-				Set<Node<Integer>> neighbours = getNeighbours(currentNodes, nodes, edges);
-				currentDistance++;
-				//Remove seen nodes.
-				nodes.remove(neighbours);
-				
-				//If they are detective locations update the shortest distance.
-				for(Node<Integer> n: neighbours){
-					if(detectives.contains(n.data())){
-						if(currentDistance < detectiveDistances.get(n.data())){
-							
-							int eq = (int) (Math.log(currentDistance)*500);
-							
-							detectiveDistances.put((Integer) n.data(), eq);
-							//Remove from detectives still to get.
-							detectives.remove(n.data());
-						}
-					}				
-				}
-				
-				currentNodes = neighbours;
-			}
-			
-			//Add the distances to give a score
-			
-			return detectiveDistances;
-	}
-
-	/**
-	 * @param Set of currentNodes
-	 * @param Set of all not-reached nodes
-	 * @param Set of all edges
-	 * @return Set of neighbouring nodes to currentNodes
-	 */
-	private Set<Node<Integer>> getNeighbours(Set<Node<Integer>> currentNodes, Set<Node<Integer>> nodes, List<Edge<Integer, Route>> edges) {
-		Set<Node<Integer>> neighbours = new HashSet<Node<Integer>>();
-		for(Edge<Integer, Route> e: edges){
-			for(Node<Integer> currentNode: currentNodes){
-				//check if current edge is connected to current node.
-				if(e.source().equals(currentNode.data()) || e.target().equals(currentNode.data()) ){
-					//If node is still to be reached (Ie. still in "nodes") add to neighbour set.
-					Node<Integer> n = findNode((Integer) e.other((Integer) currentNode.data()), nodes);
-					if(n != null){
-						neighbours.add(n);
-					}
-				}
-			}
-		}
-		return neighbours;
-	}
-	
-	/**
-	 * @param Int location
-	 * @param Set of nodes
-	 * @return Node from set with matching data, null if none match.
-	 */
-	private Node<Integer> findNode(Integer i, Set<Node<Integer>> nodes) {
-		for(Node<Integer> node: nodes){
-			if(node.data().equals(i)){
-				return node;
-			}
-		}
-		return null;
-	}
-
-	private Move MinMaxTree(){
-		System.out.println("Old");
-		HashMap<Move, Integer> MrXMoves = new HashMap<Move, Integer>();
-		
-		int savedRound = model.getRound();
-		
-		List<Move> singlemoves = model.validMoves(Colour.Black,false);
-
-		
-			
-		Integer bestChildScore = Integer.MIN_VALUE;
-		
-		
-		
-		for(Move MrXMove: singlemoves){
-			
-			if(Debug.printOutEndGame)System.out.println("Analysing "+MrXMove);
-			
-			model.setData(Tickets, Locations, Colour.Black, savedRound);
-			
-			model.turn(MrXMove);
-			
-			//get detective moves?;
-			
-			int score = minMaxCalc(5, bestChildScore, true);
-			
-			MrXMoves.put(MrXMove, score);
-			bestChildScore = Math.max(bestChildScore, score);
-		}	
-		
-		int bestScore = Integer.MIN_VALUE;
-		Move bestMove = null;
-		
-		for(Move m: MrXMoves.keySet()){
-			int score = MrXMoves.get(m);
-			if(score>=bestScore){
-				bestScore = score;
-				bestMove = m;
-			}
-		}
-		
-		return bestMove;
-		
-	}
-	
-	private int minMaxCalc(int level, Integer bestPreComputedSibling, boolean afterMrX){
-		
-		if(model.isGameOver()){
-			if(model.getWinningPlayers().contains(Colour.Black)){
-				if(Debug.printOutEndGame)System.out.println("Winning model");
-				return score(model.getLocations(), nodes, edges, model.validMoves(Colour.Black, false).size()) + winningBonus;
-			}
-			
-			if(Debug.printOutEndGame)System.out.println("Losing model.");
-			return Integer.MIN_VALUE; //score(model.getLocations(), nodes, edges, model.validMoves(Colour.Black)) - winningBonus;
-		}
-			
-		if(level == 0){
-			return score(model.getLocations(), nodes, edges, model.validMoves(Colour.Black,false).size());
-		}
-		
-		
-		
-		EnumMap<Colour, Integer> saveLocations = new EnumMap<Colour, Integer>(model.getLocations());
-		
-		EnumMap<Colour, Map<Ticket, Integer>> tmp = model.getTickets();
-		EnumMap<Colour, Map<Ticket, Integer>> saveTickets = new EnumMap<Colour, Map<Ticket, Integer>>(Colour.class);
-		for(Colour c: tmp.keySet()){
-			saveTickets.put(c, new EnumMap<Ticket, Integer>(tmp.get(c)));
-		}
-		
-		Colour savedColour = model.getCurrentPlayer();
-		int savedRound = model.getRound();
-		
-		
-		Integer bestChildScore = 0;
-		List<Move> set = model.validMoves(model.getCurrentPlayer(), false);
-		
-		
-		if(model.getCurrentPlayer().equals(Colour.Black)){
-			
-			bestChildScore = Integer.MIN_VALUE;
-			
-			for(Move currentMove: set){
-				
-				model.setData(saveTickets, saveLocations, savedColour, savedRound);
-				
-				model.turn(currentMove);
-				if(Debug.printOutGeneral)System.out.println(printLevel(level));
-				int score = minMaxCalc(level-1, bestChildScore, true);
-				if(Debug.printOutGeneral)System.out.println(printLevel(level));
-
-				bestChildScore = Math.max(bestChildScore, score);
-				
-				if(score>bestPreComputedSibling){
-					if(Debug.printOutOptimise)System.out.println("Pruned");
-					break;
-				}
-			}
-		}else if(afterMrX){
-			
-			bestChildScore = Integer.MAX_VALUE;
-			
-			for(Move currentMove: set){
-				
-				model.setData(saveTickets, saveLocations, savedColour, savedRound);
-				
-				model.turn(currentMove);
-				
-				if(Debug.printOutGeneral)System.out.println(printLevel(level));
-				int score = minMaxCalc(level-1, bestChildScore, false);
-				if(Debug.printOutGeneral)System.out.println(printLevel(level));
-				
-				bestChildScore = Math.min(bestChildScore, score);
-				
-				if(score<bestPreComputedSibling || score == Integer.MIN_VALUE){
-					if(Debug.printOutOptimise)System.out.println("Pruned");
-					break;
-				}
-			}
-		}else{
-			
-			bestChildScore = Integer.MAX_VALUE;
-			
-			for(Move currentMove: set){
-				
-				model.setData(saveTickets, saveLocations, savedColour, savedRound);
-				model.turn(currentMove);
-				if(Debug.printOutGeneral)System.out.println(printLevel(level));
-				bestChildScore = Math.min(minMaxCalc(level-1, bestChildScore, false), bestChildScore);
-				if(Debug.printOutGeneral)System.out.println(printLevel(level));
-				
-			}
-		}
-		
-		return bestChildScore;
-	}
-	
-	
 	
 	Move iterativeMinMaxHelper(int x) throws TimeLimitExceededException{
 		
@@ -409,7 +121,7 @@ public class MyAIPlayer implements Player{
 			model.setData(Tickets, Locations, Colour.Black, savedRound);
 		}
 		
-		Map<Integer, Integer> dists = breathfirstNodeSearch(Locations.get(Colour.Black), getDetectivePositions(Locations), nodes, edges);
+		Map<Integer, Integer> dists = ScoreBoard.breathfirstNodeSearch(Locations.get(Colour.Black), ScoreBoard.getDetectivePositions(Locations), nodes, edges);
 		
 		int closeDetectives=0;
 		for(Integer detectivesPos: dists.keySet()){
@@ -469,7 +181,7 @@ public class MyAIPlayer implements Player{
 		if(model.isGameOver()){
 			if(model.getWinningPlayers().contains(Colour.Black)){
 				if(Debug.printOutEndGame)System.out.println("Winning model");
-				return score(model.getLocations(), nodes, edges, model.validMoves(Colour.Black,false).size()) + winningBonus;
+				return ScoreBoard.score(model.getLocations(), nodes, edges, model.validMoves(Colour.Black,false).size()) + winningBonus;
 			}
 			
 			if(Debug.printOutEndGame)System.out.println("Losing model.");
@@ -478,7 +190,7 @@ public class MyAIPlayer implements Player{
 		}
 			
 		if(level == 0){
-			return score(model.getLocations(), nodes, edges, model.validMoves(Colour.Black, false).size());
+			return ScoreBoard.score(model.getLocations(), nodes, edges, model.validMoves(Colour.Black, false).size());
 		}
 		
 		
@@ -569,7 +281,7 @@ public class MyAIPlayer implements Player{
 		if(model.isGameOver()){
 			if(model.getWinningPlayers().contains(Colour.Black)){
 				if(Debug.printOutEndGame)System.out.println("Winning model");
-				return score(model.getLocations(), nodes, edges, model.validMoves(Colour.Black,false).size()) + winningBonus;
+				return ScoreBoard.score(model.getLocations(), nodes, edges, model.validMoves(Colour.Black,false).size()) + winningBonus;
 			}
 			
 			if(Debug.printOutEndGame)System.out.println("Losing model.");
@@ -578,7 +290,7 @@ public class MyAIPlayer implements Player{
 		}
 			
 		if(level == 0){
-			return score(model.getLocations(), nodes, edges, model.validMoves(Colour.Black, false).size());
+			return ScoreBoard.score(model.getLocations(), nodes, edges, model.validMoves(Colour.Black, false).size());
 		}
 		
 		
@@ -662,19 +374,7 @@ public class MyAIPlayer implements Player{
 		
 		return validMoves;
 		
-		
-		/*
-		Move worstMove = null;
-		int worstScore = Integer.MIN_VALUE;
-		for(Move m: validMoves){
-			if(score(model.getLocations(), nodes, edges, 0)>worstScore){
-				worstMove = m;
-			}
-		}
-		validMoves.remove(worstMove);
-		return validMoves;*/
 	}
-
 	
 	private int simpleDetectiveScore(int location){
 		
@@ -686,7 +386,7 @@ public class MyAIPlayer implements Player{
 		}
 		
 		//getting distance to detectives
-		int totalDistanceToDetectives  = pairBreathfirstNodeSearch(mrX, location, nodes, edges);
+		int totalDistanceToDetectives  = ScoreBoard.pairBreathfirstNodeSearch(mrX, location, nodes, edges);
 				
 		int positionOnBoard = Math.abs(graphDisplay.getX(location) - 509) + Math.abs(graphDisplay.getY(location) - 404);
 		
@@ -701,59 +401,6 @@ public class MyAIPlayer implements Player{
 				((int)positionScale*positionOnBoard));
 		
 	}
-	
-	private int  pairBreathfirstNodeSearch(Integer mrX, Integer detect,	Set<Node<Integer>> nodes, List<Edge<Integer, Route>> edges) {
-		
-		if(mrX.equals(detect)){
-			return 0;
-		}
-	
-		List<Edge<Integer, Route>> edges1 = new ArrayList<Edge<Integer, Route>>(edges);
-		Set<Node<Integer>> nodes1 = new HashSet<Node<Integer>>(nodes);
-		
-		for(Edge<Integer, Route> e: edges){
-			if(e.data().equals(Route.Boat)){
-				edges1.remove(e);
-			}
-		}
-		
-		int currentDistance = 0;
-		
-		//Initialise distance to maximum.
-		int distance = Integer.MAX_VALUE;
-		
-		//Start at Mr X location.
-		Set<Node<Integer>> currentNodes =  new HashSet<Node<Integer>>();
-		Node<Integer> detectNode = findNode(detect, nodes1);
-		if(detectNode == null){
-			System.err.println("Mr X not on valid location");
-		}
-		currentNodes.add(detectNode);
-		//Remove visited Nodes.
-		nodes1.remove(detectNode);
-		//while there are detective still to reach.
-		while( distance == Integer.MAX_VALUE){
-			
-			//Get nodes one step away.
-			Set<Node<Integer>> neighbours = getNeighbours(currentNodes, nodes1, edges1);
-			currentDistance++;
-			//Remove seen nodes.
-			nodes1.remove(neighbours);
-			
-			//If they are detective locations update the shortest distance.
-			for(Node<Integer> n: neighbours){
-				if(mrX.equals(n.data())){
-					return currentDistance;
-				}				
-			}
-			
-			currentNodes = neighbours;
-		}
-		
-		//Add the distances to give a score
-		
-		return 0;
-}
 
 	
 	private String printLevel(int l){
@@ -765,14 +412,12 @@ public class MyAIPlayer implements Player{
 		return s;
 	}
 
-	
-	
 	@Override
     public Move notify(int location, Set<Move> moves) {
 		System.out.println("Current MrX Location: "+location);
 		
 		try {
-			scoreInit(location);
+			setup(location);
 			Locations.put(Colour.Black, location);
 			System.out.println("Trying simple one move ahead");
 			Move bestMove = oneMoveLookAhead(location, moves);
@@ -790,13 +435,7 @@ public class MyAIPlayer implements Player{
 				//Move bestMove = MinMaxTree();
 			}
 			
-
-			
 			System.out.println("Move Choosen: "+bestMove);
-			
-			
-			
-			
 			
 			if(view.getPlayerLocation(Colour.Black) != 0){
 				
@@ -871,13 +510,8 @@ public class MyAIPlayer implements Player{
 			}else{
 				throw new Error("Move isn't real");
 			}
-			
-			
-			score = score(model.getLocations(),nodes, edges, 0);
-			
-			
-			
 				
+			score = ScoreBoard.score(model.getLocations(),nodes, edges, 0);
 			
 			if(move instanceof MoveTicket)
 				score = score - (Tickets.get(Colour.Black).get(t)*ticketScale);
