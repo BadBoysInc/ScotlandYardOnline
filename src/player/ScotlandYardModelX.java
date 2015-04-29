@@ -141,12 +141,12 @@ public class ScotlandYardModelX{
     }
 
     //Returns the possible moves a player can make.
-    protected List<Move> validMoves(Colour player) {
+    protected List<Move> validMoves(Colour player, boolean b) {
     	//Adds all the moves around a players current location.
         List<MoveTicket> movesSingle = singleMoves(Locations.get(player), player);
         List<Move> allMoves = new ArrayList<Move>(movesSingle);
         //Adds double-moves to Mr.X's valid moves.
-        if(hasTickets(Ticket.Double, player, 1) && false){
+        if(hasTickets(Ticket.Double, player, 1) && b){
         	for(MoveTicket firstMove: movesSingle){
         		List<MoveTicket> secondMoves = singleMoves(((MoveTicket)  firstMove).target, player);
         		for(MoveTicket secondMove: secondMoves){

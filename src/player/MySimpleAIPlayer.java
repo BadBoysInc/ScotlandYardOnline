@@ -194,7 +194,7 @@ public class MySimpleAIPlayer implements Player{
 				if(tickets.get(Ticket.Bus)<2){
 					for(Move m: tmp){
 						if(m instanceof MoveTicket){
-							if(!moveExists(((MoveTicket)m).target, Route.Underground)){
+							if(moveExists(((MoveTicket)m).target, Route.Underground)){
 								moves.remove(m);
 							}
 						}
@@ -202,7 +202,7 @@ public class MySimpleAIPlayer implements Player{
 				}else{
 					for(Move m: tmp){
 						if(m instanceof MoveTicket){
-							if(!moveExists(((MoveTicket)m).target, Route.Bus)){
+							if(moveExists(((MoveTicket)m).target, Route.Bus)){
 								moves.remove(m);
 							}
 						}
@@ -263,7 +263,11 @@ public class MySimpleAIPlayer implements Player{
 			}
 			
 			if(bestMove== null){
-				bestMove = moves.iterator().next();
+				if(moves.isEmpty()){
+					System.out.println(tmp);
+				}else{
+					bestMove = tmp.iterator().next();
+				}
 			}
 			
 			if(Debug.printOutDetect)System.out.println(bestMove);

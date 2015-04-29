@@ -38,7 +38,7 @@ public class AIMrXPlayerFactory implements PlayerFactory {
         typeMap.put(Colour.Green, AIMrXPlayerFactory.PlayerType.SimpAI);
         typeMap.put(Colour.Red, AIMrXPlayerFactory.PlayerType.SimpAI);
         typeMap.put(Colour.White, AIMrXPlayerFactory.PlayerType.SimpAI);
-        typeMap.put(Colour.Yellow, AIMrXPlayerFactory.PlayerType.GUI);
+        typeMap.put(Colour.Yellow, AIMrXPlayerFactory.PlayerType.SimpAI);
 
         positionsFilename = "resources/pos.txt";
         imageFilename     = "resources/map.jpg";
