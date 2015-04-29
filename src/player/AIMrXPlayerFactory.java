@@ -1,17 +1,24 @@
 package player;
 
 import gui.Gui;
-import net.PlayerFactory;
-import scotlandyard.Colour;
-import scotlandyard.Player;
-import scotlandyard.ScotlandYardView;
-import scotlandyard.Spectator;
 
+import java.awt.GraphicsDevice;
+import java.awt.GraphicsEnvironment;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import javax.swing.JFrame;
+import javax.swing.SwingUtilities;
+
+import net.PlayerFactory;
+import newgui.PossibleMovesOverLay;
+import scotlandyard.Colour;
+import scotlandyard.Player;
+import scotlandyard.ScotlandYardView;
+import scotlandyard.Spectator;
 
 /**
  * The RandomPlayerFactory is an example of a PlayerFactory that
@@ -28,8 +35,10 @@ public class AIMrXPlayerFactory implements PlayerFactory {
     String positionsFilename;
 
     protected List<Spectator> spectators;
-    AIAssistedGUI gui;
 
+    PossibleMovesOverLay overlay;
+
+    AIAssistedGUI gui;
 
     public AIMrXPlayerFactory() {
         typeMap = new HashMap<Colour, PlayerType>();
@@ -94,6 +103,9 @@ public class AIMrXPlayerFactory implements PlayerFactory {
         System.out.println("GUI");
         if (gui == null) {
 			try {
+
+				makeOverlay();
+
 				gui = new AIAssistedGUI(view, imageFilename, positionsFilename);
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
@@ -103,4 +115,44 @@ public class AIMrXPlayerFactory implements PlayerFactory {
 		}
         return gui;
     }
+
+	private void makeOverlay() {
+			
+		
+		GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
+	        GraphicsDevice gd = ge.getDefaultScreenDevice();
+
+	        //If translucent windows aren't supported, exit.
+	        if (!gd.isWindowTranslucencySupported(GraphicsDevice.WindowTranslucency.TRANSLUCENT)) {
+	            System.err.println(
+	                "Translucency is not supported");
+	                System.exit(0);
+	        }
+	        
+	        JFrame.setDefaultLookAndFeelDecorated(true);
+
+	        // Create the GUI on the event-dispatching thread
+	        SwingUtilities.invokeLater(new Runnable() {
+	            @Override
+	            public void run() {
+	            	overlay = new PossibleMovesOverLay();
+	            	
+	                // Set the window to 55% opaque (45% translucent).
+	                overlay.setOpacity(0.55f);
+
+	                // Display the window.
+	                overlay.setVisible(true);
+	            }
+	        });
+	}
 }
+
+
+
+
+
+
+
+
+
+
