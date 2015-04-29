@@ -3,6 +3,7 @@ import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.EnumMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -10,6 +11,9 @@ import java.util.Set;
 import javax.swing.JButton;
 
 
+
+
+import newgui.PossibleMovesOverLay;
 import scotlandyard.Colour;
 import scotlandyard.Edge;
 import scotlandyard.Graph;
@@ -30,12 +34,14 @@ public class AIAssistedGUI extends Gui{
 	List<Integer> possibleLocations;
 	ScotlandYardView view;
 	final private Graph<Integer, Route> graph;
+	List<Edge<Integer, Route>> edges;
 	Colour firstPlayer;
 	Move mrXMove;	
 	Ticket mrXT1;
 	Ticket mrXT2;
+	PossibleMovesOverLay overlay;
 	
-	public AIAssistedGUI(ScotlandYardView v, String imageFilename, String positionsFilename) throws IOException {
+	public AIAssistedGUI(ScotlandYardView v, String imageFilename, String positionsFilename, PossibleMovesOverLay overlay) throws IOException {
 		super(v, imageFilename, positionsFilename);
 		setDefaultCloseOperation(EXIT_ON_CLOSE);
 		
@@ -56,15 +62,13 @@ public class AIAssistedGUI extends Gui{
 			public void windowDeactivated(WindowEvent e) {}
         });
 		
-		view = v;
-		
+		view = v;	
 		firstPlayer = null;
-		possibleLocations = new ArrayList<Integer>();
-		possibleLocations.add(0);
-		
+		possibleLocations = new ArrayList<Integer>();			
+		this.overlay = overlay;
 		ScotlandYardGraphReader reader 	= new ScotlandYardGraphReader();
 		graph = reader.readGraph("./resources/graph.txt/");
-		
+		edges = new ArrayList<Edge<Integer, Route>>(graph.getEdges());
 	}
 	
 	//Asks to make a move.
@@ -75,11 +79,11 @@ public class AIAssistedGUI extends Gui{
 	
 	//Tells spectator a move is made.
 	public void notify(Move move){
-		if(move.colour == Colour.Black && view.getPlayerLocation(Colour.Black) != 0){
+		if(move.colour.equals(Colour.Black) && view.getPlayerLocation(Colour.Black) != 0){
 			mrXMove = move;
-			if(move instanceof MoveTicket)
-				mrXT1 = ((MoveTicket) move).ticket;
-			else if(move instanceof MoveDouble){
+			if(move instanceof MoveTicket){
+				mrXT1 = ((MoveTicket) move).ticket;			
+			}else if(move instanceof MoveDouble){
 				mrXT1	= ((MoveDouble) move).move1.ticket;
 				mrXT2	= ((MoveDouble) move).move2.ticket;
 			}
@@ -93,9 +97,12 @@ public class AIAssistedGUI extends Gui{
 				possibleLocations = new ArrayList<Integer>();
 				possibleLocations.add(view.getPlayerLocation(Colour.Black));
 			}else{
+				System.out.println("got here");
 				updateValidLocations();
 			}
 		}
+
+		overlay.clear();
 		super.notify(move);
 	}
 	
@@ -175,7 +182,41 @@ public class AIAssistedGUI extends Gui{
     
     //Talks to the overlay.
     private void consoleAssist(Set<Move> moves){
-    	System.out.println(possibleLocations);
+    	if(view.getPlayerLocation(Colour.Black) != 0){
+
+	    	int suggestedMove = 1;
+	    	int bestScore = Integer.MAX_VALUE;
+	    	for(Move m: moves){
+	    		if(m instanceof MoveTicket){
+	    			int score = ScoreBoard.score(getLocations(m.colour, ((MoveTicket) m).target), graph.getNodes(), edges, 0);
+		    		if(score < bestScore){
+		    			bestScore = score;
+		    			suggestedMove = ((MoveTicket) m).target;
+		    		}
+	    		}else if(m instanceof MoveDouble){
+	    			int score = ScoreBoard.score(getLocations(m.colour, ((MoveDouble) m).move2.target), graph.getNodes(), edges, 0);
+		    		if(score < bestScore){
+		    			bestScore = score;
+		        		suggestedMove = ((MoveDouble) m).move2.target;
+		    		}
+	    		}	    			
+	    	}
+	    	overlay.updatePositions(possibleLocations, suggestedMove);
+    	}else{
+	    	overlay.updatePositions(possibleLocations);
+
+    	}
     }
 	
+    private EnumMap<Colour, Integer> getLocations(Colour colour, int target){
+    	EnumMap<Colour, Integer> map = new EnumMap<Colour, Integer>(Colour.class);
+    	for(Colour c: view.getPlayers()){
+    		if(c.equals(colour)){
+    			map.put(c, target);
+    		}else{
+        		map.put(c, view.getPlayerLocation(c));
+    		}
+    	}
+    	return map;
+    }
 }

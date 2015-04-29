@@ -474,6 +474,5 @@ public class MyAIPlayer implements Player{
 		}
 		return bestMove;
 	}
-	
 
 }

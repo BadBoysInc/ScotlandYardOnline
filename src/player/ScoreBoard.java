@@ -79,7 +79,6 @@ public class ScoreBoard {
 			Set<Node<Integer>> nodes = new HashSet<Node<Integer>>(nodes2);
 			Set<Integer> detectives = new HashSet<Integer>(d);
 			
-			
 			int currentDistance = 0;
 			
 			//hash table of detective location against distance.
@@ -120,7 +119,6 @@ public class ScoreBoard {
 						}
 					}				
 				}
-				
 				currentNodes = neighbours;
 			}
 			
@@ -165,10 +163,6 @@ public class ScoreBoard {
 		}
 		return null;
 	}
-	
-
-	
-
 	
 	static int pairBreathfirstNodeSearch(Integer mrX, Integer detect,	Set<Node<Integer>> nodes, List<Edge<Integer, Route>> edges) {
 		
@@ -217,9 +211,7 @@ public class ScoreBoard {
 			
 			currentNodes = neighbours;
 		}
-		
-		//Add the distances to give a score
-		
 		return 0;
 	}
+	
 }

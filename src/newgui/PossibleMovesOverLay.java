@@ -1,20 +1,17 @@
 package newgui;
 
 import java.io.IOException;
-import java.util.HashSet;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.swing.JFrame;
 
 import scotlandyard.Move;
-import scotlandyard.MoveDouble;
-import scotlandyard.MoveTicket;
-import scotlandyard.Spectator;
-import scotlandyard.Ticket;
 
-public class PossibleMovesOverLay extends JFrame implements Spectator {
+public class PossibleMovesOverLay extends JFrame{
 
-	static Set<Integer> pos;
+	static List<Integer> pos = null;
+	static int recommendedMove = 0;
 		
 	public PossibleMovesOverLay(){
 		super();
@@ -22,9 +19,7 @@ public class PossibleMovesOverLay extends JFrame implements Spectator {
 		setSize(1030, 840);
 		setLocation(280, 0);
 		try {
-			pos = new HashSet<Integer>();
-			pos.add(new Integer(1));
-			pos.add(new Integer(88));
+			pos = new ArrayList<Integer>();
 			add(new PossiblePositionsPanel());
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
@@ -36,19 +31,20 @@ public class PossibleMovesOverLay extends JFrame implements Spectator {
 	}
 
 	
-    
-	
-	@Override
-	public void notify(Move move) {
-		System.out.println("Notified");
-		
-		if(move instanceof MoveTicket){
-			pos.add(((MoveTicket) move).target);			
-		}else if(move instanceof MoveDouble){
-			pos.add(((MoveDouble) move).move2.target);			
-		}
-		
-		
+	public void clear(){
+		recommendedMove = 0;
 	}
+    
+	public void updatePositions(List<Integer> possibleLocations){
+		pos = possibleLocations;
+	}
+
+
+
+	public void updatePositions(List<Integer> possibleLocations, int bestMove) {
+		updatePositions(possibleLocations);
+		recommendedMove = bestMove;
+	}	
+	
 	
 }
