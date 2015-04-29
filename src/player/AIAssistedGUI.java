@@ -66,12 +66,14 @@ public class AIAssistedGUI extends Gui{
 		graph = reader.readGraph("./resources/graph.txt/");
 		
 	}
-
+	
+	//Asks to make a move.
 	public Move notify(int location, Set<Move> moves){
 		consoleAssist(moves);
 		return super.notify(location, moves);
 	}
 	
+	//Tells spectator a move is made.
 	public void notify(Move move){
 		if(move.colour == Colour.Black && view.getPlayerLocation(Colour.Black) != 0){
 			mrXMove = move;
@@ -96,7 +98,8 @@ public class AIAssistedGUI extends Gui{
 		}
 		super.notify(move);
 	}
-
+	
+	//Update the possible places MrX.
 	private void updateValidLocations() {
 		if(view.getPlayerLocation(Colour.Black) != 0){
 			List<Integer> newPossibleLocations = new ArrayList<Integer>();
@@ -134,7 +137,6 @@ public class AIAssistedGUI extends Gui{
         		}
         	}
         }
-        
         return moves;
     }
     
@@ -162,6 +164,7 @@ public class AIAssistedGUI extends Gui{
     	return (view.getPlayerTickets(player, t) >= n);
     }
     
+    //See's if a player is on a tile.
     boolean playerPresent(int location, Colour player) {
     	for(Colour c: view.getPlayers()){
     		if((view.getPlayerLocation(c) == location) && (c != Colour.Black))
@@ -170,6 +173,7 @@ public class AIAssistedGUI extends Gui{
     	return false;
     }
     
+    //Talks to the overlay.
     private void consoleAssist(Set<Move> moves){
     	System.out.println(possibleLocations);
     }

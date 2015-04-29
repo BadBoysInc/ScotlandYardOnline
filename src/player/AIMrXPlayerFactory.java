@@ -56,14 +56,13 @@ public class AIMrXPlayerFactory implements PlayerFactory {
     }
 
     public AIMrXPlayerFactory(Map<Colour, PlayerType> typeMap, String imageFilename, String positionsFilename) {
-        //this.typeMap = typeMap;
     	this();
         this.imageFilename = imageFilename;
         this.positionsFilename = positionsFilename;
         spectators = new ArrayList<Spectator>();
     }
 
-
+    //Chooses player type.
 	@Override
     public Player player(Colour colour, ScotlandYardView view, String mapFilename) {
         switch (typeMap.get(colour)) {
@@ -80,25 +79,27 @@ public class AIMrXPlayerFactory implements PlayerFactory {
         }
     }
 
+	//Starts the Gui.
     @Override
     public void ready() {
         if (gui != null) gui.run();
     }
-
+    
+    //Gets the spectators from the view.
     @Override
     public List<Spectator> getSpectators(ScotlandYardView view) {
         List<Spectator> specs = new ArrayList<Spectator>();
         specs.add(gui(view));
         return specs;
     }
-
+    
+    //Finishes the Gui.
     @Override
     public void finish() {
         if (gui != null) gui.update();
     }
 
-
-
+    //Creates the AI assisted Gui.
     private AIAssistedGUI gui(ScotlandYardView view) {
         System.out.println("GUI");
         if (gui == null) {
@@ -106,43 +107,37 @@ public class AIMrXPlayerFactory implements PlayerFactory {
 				JFrame.setDefaultLookAndFeelDecorated(true);
 				gui = new AIAssistedGUI(view, imageFilename, positionsFilename);
 				makeOverlay();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
+			} catch (IOException e) {e.printStackTrace();}
             spectators.add(gui);
             spectators.add(overlay);
             
 		}
         return gui;
     }
-
+    
+    //Create the overlay.
 	private void makeOverlay() {
-			
-		
-		GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
-	        GraphicsDevice gd = ge.getDefaultScreenDevice();
 
-	        //If translucent windows aren't supported, exit.
-	        if (!gd.isWindowTranslucencySupported(GraphicsDevice.WindowTranslucency.TRANSLUCENT)) {
-	            
-	        }else{
-	        
-		        // Create the GUI on the event-dispatching thread
-		        SwingUtilities.invokeLater(new Runnable() {
-		            @Override
-		            public void run() {
-		            	overlay = new PossibleMovesOverLay();
-		            	
+		GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
+		GraphicsDevice gd = ge.getDefaultScreenDevice();
+
+	    //If translucent windows aren't supported, exit.
+	    if (!gd.isWindowTranslucencySupported(GraphicsDevice.WindowTranslucency.TRANSLUCENT)) {
+	    }else{
+	    	// Create the GUI on the event-dispatching thread
+	    	SwingUtilities.invokeLater(new Runnable() {
+	    		@Override
+		        public void run() {
+	    			overlay = new PossibleMovesOverLay();
 		                // Set the window to 55% opaque (45% translucent).
 		                overlay.setOpacity(0.50f);
-		
 		                // Display the window.
 		                overlay.setVisible(true);
-		            }
-		        });
-	        }
+	    		}
+		    });
+	    }
 	}
+	
 }
 
 

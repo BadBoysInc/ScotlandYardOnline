@@ -92,17 +92,15 @@ public class MySimpleAIPlayer implements Player{
 	 */
 	private int  breathfirstNodeSearch(Integer mrX, Integer detect,	Graph<Integer, Route> graph) {
 			
-			if(mrX.equals(detect)){
+			if(mrX.equals(detect))
 				return 0;
-			}
 		
 			Set<Edge<Integer, Route>> edges = new HashSet<Edge<Integer, Route>>(graph.getEdges());
 			Set<Node<Integer>> nodes = new HashSet<Node<Integer>>(graph.getNodes());
 			
 			for(Edge<Integer, Route> e: graph.getEdges()){
-				if(e.data().equals(Route.Boat)){
+				if(e.data().equals(Route.Boat))
 					edges.remove(e);
-				}
 			}
 			
 			int currentDistance = 0;
@@ -113,9 +111,9 @@ public class MySimpleAIPlayer implements Player{
 			//Start at Mr X location.
 			Set<Node<Integer>> currentNodes =  new HashSet<Node<Integer>>();
 			Node<Integer> detectNode = findNode(detect, nodes);
-			if(detectNode == null){
+			if(detectNode == null)
 				System.err.println("Mr X not on valid location");
-			}
+			
 			currentNodes.add(detectNode);
 			//Remove visited Nodes.
 			nodes.remove(detectNode);
@@ -130,9 +128,8 @@ public class MySimpleAIPlayer implements Player{
 				
 				//If they are detective locations update the shortest distance.
 				for(Node<Integer> n: neighbours){
-					if(mrX.equals(n.data())){
-						return currentDistance;
-					}				
+					if(mrX.equals(n.data()))
+						return currentDistance;		
 				}
 				
 				currentNodes = neighbours;
@@ -210,9 +207,6 @@ public class MySimpleAIPlayer implements Player{
 				}
 			}
 			
-			
-			
-			
 			int bestScore = Integer.MAX_VALUE;
 			Move bestMove = null;
 			int score = Integer.MAX_VALUE;
@@ -244,17 +238,11 @@ public class MySimpleAIPlayer implements Player{
 					throw new Error("Move isn't real");
 				}
 				
-				
 				score = score(newLocation);
-				
-				
-				
-					
-				
+
 				if(move instanceof MoveTicket)
 					score = score - (tickets.get(t)*ticketScale);
-				
-				
+
 				if(score<=bestScore){
 					bestScore = score;
 					bestMove = move;
@@ -274,10 +262,7 @@ public class MySimpleAIPlayer implements Player{
 			
 			return bestMove;
 			
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		} catch (IOException e) {e.printStackTrace();}
 		System.err.println("Someting has gone wrong");
 		return moves.iterator().next();
 		
