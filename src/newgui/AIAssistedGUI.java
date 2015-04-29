@@ -1,18 +1,13 @@
 package newgui;
+import gui.Gui;
+
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.EnumMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-
-import javax.swing.JButton;
-
-
-
-
 
 import player.ScoreBoard;
 import scotlandyard.Colour;
@@ -20,13 +15,11 @@ import scotlandyard.Edge;
 import scotlandyard.Graph;
 import scotlandyard.Move;
 import scotlandyard.MoveDouble;
-import scotlandyard.MovePass;
 import scotlandyard.MoveTicket;
 import scotlandyard.Route;
 import scotlandyard.ScotlandYardGraphReader;
 import scotlandyard.ScotlandYardView;
 import scotlandyard.Ticket;
-import gui.Gui;
 
 
 @SuppressWarnings("serial")

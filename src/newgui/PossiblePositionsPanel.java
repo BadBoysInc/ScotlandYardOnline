@@ -13,6 +13,7 @@ import player.GraphDisplay;
  */
 public class PossiblePositionsPanel extends JPanel {
 
+	private static final long serialVersionUID = 1L;
 	Image blackLocation, background, suggested;
 	GraphDisplay position;
 	

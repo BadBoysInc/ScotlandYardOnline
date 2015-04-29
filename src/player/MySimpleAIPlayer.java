@@ -279,7 +279,7 @@ public class MySimpleAIPlayer implements Player{
      * @return True if edge found, False if not.
      */
 	private boolean moveExists(int node, Route route) {
-		for(Edge e: graph.getEdges()){
+		for(Edge<Integer, Route> e: graph.getEdges()){
 			if((e.target().equals(node) || e.source().equals(node)) && e.data().equals(route)){
 				return true;
 			}

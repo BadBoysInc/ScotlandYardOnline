@@ -166,6 +166,8 @@ public class MyAIPlayer implements Player{
 	
 	int min(int level, Integer bestPreComputedSibling, boolean afterMrX) throws TimeLimitExceededException{
 		
+		
+		
 		if(model.isGameOver()){
 			if(model.getWinningPlayers().contains(Colour.Black)){
 				if(Debug.printOutEndGame)System.out.println("Winning model");
@@ -178,6 +180,9 @@ public class MyAIPlayer implements Player{
 			
 		if(level == 0)
 			return ScoreBoard.score(model.getLocations(), nodes, edges, model.validMoves(Colour.Black, false).size());
+		
+		if(new Date().getTime()-init >14000)
+			throw new TimeLimitExceededException("");
 		
 		EnumMap<Colour, Integer> saveLocations = new EnumMap<Colour, Integer>(model.getLocations());
 		
@@ -222,10 +227,7 @@ public class MyAIPlayer implements Player{
 			}
 			
 		}else{
-			
-			if(new Date().getTime()-init >14700)
-				throw new TimeLimitExceededException("");
-				
+							
 			bestChildScore = Integer.MAX_VALUE;
 			
 			for(Move currentMove: set){
@@ -439,6 +441,7 @@ public class MyAIPlayer implements Player{
 		int score = Integer.MAX_VALUE;
 		
 		for(Move move: moves){
+			@SuppressWarnings("unused")
 			int newLocation;
 			int ticketScale = 0;
 			

@@ -1,7 +1,5 @@
 package player;
 
-import gui.Gui;
-
 import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
 import java.io.IOException;
@@ -11,7 +9,6 @@ import java.util.List;
 import java.util.Map;
 
 import javax.swing.JFrame;
-import javax.swing.SwingUtilities;
 
 import net.PlayerFactory;
 import newgui.AIAssistedGUI;

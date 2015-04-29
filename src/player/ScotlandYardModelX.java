@@ -20,7 +20,10 @@ import scotlandyard.Route;
 import scotlandyard.Ticket;
 
 
-
+/**
+ * A model that can be used for simulating different moves and situations.
+ * @author Samuel
+ */
 public class ScotlandYardModelX{
 	
 	//Game Constants:
@@ -39,7 +42,13 @@ public class ScotlandYardModelX{
 	private EnumMap<Colour, Map<Ticket, Integer>> Tickets;
 	private EnumMap<Colour, Integer> Locations;
 	
-	
+	/**
+	 * Initialises variables
+	 * @param NumberOfDetectives
+	 * @param Rounds
+	 * @param Edges in graph
+	 * @throws IOException
+	 */
     public ScotlandYardModelX(int numberOfDetectives, List<Boolean> rounds, List<Edge<Integer, Route>> edges2) throws IOException {
     		
 		this.edges = edges2;
@@ -58,6 +67,10 @@ public class ScotlandYardModelX{
 		Tickets = new EnumMap<Colour, Map<Ticket, Integer>>(Colour.class);
     }
 
+    /**
+     * Makes move in model and incrementing the turn
+     * @param move
+     */
     public void turn(Move move) {
         play(move);
         nextPlayer();
@@ -87,14 +100,6 @@ public class ScotlandYardModelX{
         
     //Changes the game-state to after a double-move has been played and notifies the spectators.
     private void play(MoveDouble move) {
-    	MoveTicket dummy1 = move.move1;
-    	MoveTicket dummy2 = move.move2;
-    	if(getRounds().get(getRound()+1) != true)
-    		dummy1 = getDummyTicket(move.move1);
-    	if(getRounds().get(getRound()+2) != true)
-    		dummy2 = getDummyTicket(move.move2);
-    	
-    	
     	makeMove((MoveTicket)move.move1);
     	makeMove((MoveTicket)move.move2);
     	
@@ -135,12 +140,7 @@ public class ScotlandYardModelX{
     }
     
 
-	//Creates a dummy ticket with Mr. X's last known location. 
-    private MoveTicket getDummyTicket(MoveTicket move) {
-    	return MoveTicket.instance(Colour.Black, move.ticket, MrXsLastKnownLocation);
-    }
-
-    //Returns the possible moves a player can make.
+	//Returns the possible moves a player can make.
     protected List<Move> validMoves(Colour player, boolean b) {
     	//Adds all the moves around a players current location.
         List<MoveTicket> movesSingle = singleMoves(Locations.get(player), player);

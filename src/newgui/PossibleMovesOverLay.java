@@ -5,20 +5,20 @@ import java.util.ArrayList;
 import java.util.List;
 
 import javax.swing.JFrame;
-
-import scotlandyard.Move;
+import javax.swing.WindowConstants;
 
 /**
  * A Gui that indicates the possible locations of Mr X and the recommend moves for the detective.
  */
 public class PossibleMovesOverLay extends JFrame{
 
+	private static final long serialVersionUID = 1L;
 	static List<Integer> pos = null;
 	static int recommendedMove = 0;
 		
 	public PossibleMovesOverLay(){
 		super();
-		setDefaultCloseOperation(this.DISPOSE_ON_CLOSE);
+		setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 		setSize(1030, 840);
 		setLocation(280, 0);
 		try {
