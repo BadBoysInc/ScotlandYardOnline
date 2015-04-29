@@ -2,7 +2,8 @@ package player;
 
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.EnumMap;
 import java.util.HashMap;
@@ -14,12 +15,12 @@ import java.util.Set;
 
 import javax.naming.TimeLimitExceededException;
 
-
 import scotlandyard.Colour;
 import scotlandyard.Edge;
 import scotlandyard.Graph;
 import scotlandyard.Move;
 import scotlandyard.MoveDouble;
+import scotlandyard.MovePass;
 import scotlandyard.MoveTicket;
 import scotlandyard.Node;
 import scotlandyard.Player;
@@ -46,12 +47,11 @@ public class MyAIPlayer implements Player{
 	Set<Node<Integer>> nodes;
 	
 	long init;
-	Date time;
 	
 	//Varaiables.
 	int winningBonus = 1000;
 	int distanceFromDetectivesScale = 1;
-	int currentOptionsScale = 2;
+	int currentOptionsScale = 10;
 	int minDistanceScale = 3;
 	int positionScale = 1;
 	
@@ -123,12 +123,9 @@ public class MyAIPlayer implements Player{
 		//getting location
 		Integer mrX = locations.get(Colour.Black);
 		
-		Set<Integer> detectivesPos = new HashSet<Integer>();
-		for(Colour c: locations.keySet()){
-			if(!c.equals(Colour.Black)){
-				detectivesPos.add(locations.get(c));
-			}
-		}
+		Set<Integer> detectivesPos = getDetectivePositions(locations);
+		
+		
 		
 		//getting distance to detectives
 		int totalDistanceToDetectives = 0;
@@ -151,6 +148,16 @@ public class MyAIPlayer implements Player{
 				currentOptionsScale*MrXcurrentOptions + 
 				minDistanceScale*minDistanceToDetectives + 
 				positionScale*positionOnBoard);
+	}
+
+	private Set<Integer> getDetectivePositions(EnumMap<Colour, Integer> locations) {
+		Set<Integer> detectivesPos = new HashSet<Integer>();
+		for(Colour c: locations.keySet()){
+			if(!c.equals(Colour.Black)){
+				detectivesPos.add(locations.get(c));
+			}
+		}
+		return detectivesPos;
 	}
 
 	/**
@@ -258,32 +265,29 @@ public class MyAIPlayer implements Player{
 		
 		int savedRound = model.getRound();
 		
-		List<Move> singlemoves = model.validMoves(Colour.Black);
+		List<Move> singlemoves = model.validMoves(Colour.Black,false);
 
-		if(model.isReady() && !model.isGameOver()){
+		
 			
-			Integer bestChildScore = Integer.MIN_VALUE;
+		Integer bestChildScore = Integer.MIN_VALUE;
+		
+		
+		
+		for(Move MrXMove: singlemoves){
 			
+			if(Debug.printOutEndGame)System.out.println("Analysing "+MrXMove);
 			
+			model.setData(Tickets, Locations, Colour.Black, savedRound);
 			
-			for(Move MrXMove: singlemoves){
-				
-				if(Debug.printOutEndGame)System.out.println("Analysing "+MrXMove);
-				
-				model.setData(Tickets, Locations, Colour.Black, savedRound);
-				
-				model.turn(MrXMove);
-				
-				//get detective moves?;
-				
-				int score = minMaxCalc(5, bestChildScore, true);
-				
-				MrXMoves.put(MrXMove, score);
-				bestChildScore = Math.max(bestChildScore, score);
-			}	
-		}else{
-			System.out.println("ERROR: Game over");
-		}
+			model.turn(MrXMove);
+			
+			//get detective moves?;
+			
+			int score = minMaxCalc(5, bestChildScore, true);
+			
+			MrXMoves.put(MrXMove, score);
+			bestChildScore = Math.max(bestChildScore, score);
+		}	
 		
 		int bestScore = Integer.MIN_VALUE;
 		Move bestMove = null;
@@ -305,7 +309,7 @@ public class MyAIPlayer implements Player{
 		if(model.isGameOver()){
 			if(model.getWinningPlayers().contains(Colour.Black)){
 				if(Debug.printOutEndGame)System.out.println("Winning model");
-				return score(model.getLocations(), nodes, edges, model.validMoves(Colour.Black).size()) + winningBonus;
+				return score(model.getLocations(), nodes, edges, model.validMoves(Colour.Black, false).size()) + winningBonus;
 			}
 			
 			if(Debug.printOutEndGame)System.out.println("Losing model.");
@@ -313,7 +317,7 @@ public class MyAIPlayer implements Player{
 		}
 			
 		if(level == 0){
-			return score(model.getLocations(), nodes, edges, model.validMoves(Colour.Black).size());
+			return score(model.getLocations(), nodes, edges, model.validMoves(Colour.Black,false).size());
 		}
 		
 		
@@ -331,7 +335,7 @@ public class MyAIPlayer implements Player{
 		
 		
 		Integer bestChildScore = 0;
-		List<Move> set = model.validMoves(model.getCurrentPlayer());
+		List<Move> set = model.validMoves(model.getCurrentPlayer(), false);
 		
 		
 		if(model.getCurrentPlayer().equals(Colour.Black)){
@@ -396,39 +400,51 @@ public class MyAIPlayer implements Player{
 	
 	
 	Move iterativeMinMaxHelper(int x) throws TimeLimitExceededException{
-			
-		System.out.println("New "+ x);
 		
 		HashMap<Move, Integer> MrXMoves = new HashMap<Move, Integer>();
 		
-		int savedRound = model.getRound();
+		int savedRound = view.getRound();
 		
-		List<Move> singlemoves = model.validMoves(Colour.Black);
-
-		if(model.isReady() && !model.isGameOver()){
-			
-			Integer bestChildScore = Integer.MIN_VALUE;
-			
-			
-			
-			for(Move MrXMove: singlemoves){
-				
-				if(Debug.printOutEndGame)System.out.println("Analysing "+MrXMove);
-				
-				model.setData(Tickets, Locations, Colour.Black, savedRound);
-				
-				model.turn(MrXMove);
-				
-				//get detective moves?;
-				
-				int score = min(x, bestChildScore, true);
-				
-				MrXMoves.put(MrXMove, score);
-				bestChildScore = Math.max(bestChildScore, score);
-			}	
-		}else{
-			System.out.println("ERROR: Game over");
+		if(x>4){
+			model.setData(Tickets, Locations, Colour.Black, savedRound);
 		}
+		
+		Map<Integer, Integer> dists = breathfirstNodeSearch(Locations.get(Colour.Black), getDetectivePositions(Locations), nodes, edges);
+		
+		int closeDetectives=0;
+		for(Integer detectivesPos: dists.keySet()){
+			if(dists.get(detectivesPos)<360){
+				closeDetectives++;
+			}
+		}
+		List<Move> singlemoves;
+		if(closeDetectives>2 || (closeDetectives>1 && view.getRounds().get(view.getRound()+2).equals(false))){
+			singlemoves = model.validMoves(Colour.Black, true);
+		}else{
+			singlemoves = model.validMoves(Colour.Black, false);
+		}
+			
+			
+		Integer bestChildScore = Integer.MIN_VALUE;
+		
+		
+		
+		for(Move MrXMove: singlemoves){
+			
+			if(Debug.printOutEndGame)System.out.println("Analysing "+MrXMove);
+			
+			model.setData(Tickets, Locations, Colour.Black, savedRound);
+			
+			model.turn(MrXMove);
+			
+			//get detective moves?;
+			
+			int score = min(x, bestChildScore, true);
+			
+			MrXMoves.put(MrXMove, score);
+			bestChildScore = Math.max(bestChildScore, score);
+		}	
+		
 		
 		int bestScore = Integer.MIN_VALUE;
 		Move bestMove = null;
@@ -453,7 +469,7 @@ public class MyAIPlayer implements Player{
 		if(model.isGameOver()){
 			if(model.getWinningPlayers().contains(Colour.Black)){
 				if(Debug.printOutEndGame)System.out.println("Winning model");
-				return score(model.getLocations(), nodes, edges, model.validMoves(Colour.Black).size()) + winningBonus;
+				return score(model.getLocations(), nodes, edges, model.validMoves(Colour.Black,false).size()) + winningBonus;
 			}
 			
 			if(Debug.printOutEndGame)System.out.println("Losing model.");
@@ -462,7 +478,7 @@ public class MyAIPlayer implements Player{
 		}
 			
 		if(level == 0){
-			return score(model.getLocations(), nodes, edges, model.validMoves(Colour.Black).size());
+			return score(model.getLocations(), nodes, edges, model.validMoves(Colour.Black, false).size());
 		}
 		
 		
@@ -481,7 +497,7 @@ public class MyAIPlayer implements Player{
 		
 		Integer bestChildScore = 0;
 		int currentPlayer = model.getPlayers().indexOf(model.getCurrentPlayer());
-		List<Move> set = oneLookAhead(model.validMoves(model.getCurrentPlayer()));
+		List<Move> set = oneLookAhead(oneLookAhead(model.validMoves(model.getCurrentPlayer(), false)));
 		
 		
 		
@@ -514,7 +530,7 @@ public class MyAIPlayer implements Player{
 			}
 			
 		}else{
-			if(new Date().getTime()-init >14000){
+			if(new Date().getTime()-init >14700){
 				throw new TimeLimitExceededException("");
 			}
 			bestChildScore = Integer.MAX_VALUE;
@@ -553,7 +569,7 @@ public class MyAIPlayer implements Player{
 		if(model.isGameOver()){
 			if(model.getWinningPlayers().contains(Colour.Black)){
 				if(Debug.printOutEndGame)System.out.println("Winning model");
-				return score(model.getLocations(), nodes, edges, model.validMoves(Colour.Black).size()) + winningBonus;
+				return score(model.getLocations(), nodes, edges, model.validMoves(Colour.Black,false).size()) + winningBonus;
 			}
 			
 			if(Debug.printOutEndGame)System.out.println("Losing model.");
@@ -562,7 +578,7 @@ public class MyAIPlayer implements Player{
 		}
 			
 		if(level == 0){
-			return score(model.getLocations(), nodes, edges, model.validMoves(Colour.Black).size());
+			return score(model.getLocations(), nodes, edges, model.validMoves(Colour.Black, false).size());
 		}
 		
 		
@@ -579,7 +595,7 @@ public class MyAIPlayer implements Player{
 		
 		
 		Integer bestChildScore = 0;
-		List<Move> set = model.validMoves(model.getCurrentPlayer());
+		List<Move> set = model.validMoves(model.getCurrentPlayer(), false);
 		
 		
 		if(model.getCurrentPlayer().equals(Colour.Black)){
@@ -611,6 +627,43 @@ public class MyAIPlayer implements Player{
 	
 	
 	private List<Move> oneLookAhead(List<Move> validMoves) {
+		
+		Collections.sort(validMoves, new Comparator<Move>(){
+
+			@Override
+			public int compare(Move m1, Move m2) {
+				int targetm1=0;
+				if(m1 instanceof MoveTicket){
+					targetm1 = ((MoveTicket)m1).target;
+				}else if(m1 instanceof MoveDouble){
+					targetm1 = ((MoveDouble)m1).move2.target;
+				}else{
+					targetm1 = model.getPlayerLocation(m1.colour);
+				}
+				
+				int targetm2=0;
+				if(m2 instanceof MoveTicket){
+					targetm2 = ((MoveTicket)m2).target;
+				}else if(m2 instanceof MoveDouble){
+					targetm2 = ((MoveDouble)m2).move2.target;
+				}else{
+					targetm2 = model.getPlayerLocation(m2.colour);
+				}
+					
+				return(simpleDetectiveScore(targetm1)-simpleDetectiveScore(targetm2));
+			}			
+		});
+		
+		int l = validMoves.size();
+		while(l>2){
+			validMoves.remove(l-1);
+			l--;
+		}
+		
+		return validMoves;
+		
+		
+		/*
 		Move worstMove = null;
 		int worstScore = Integer.MIN_VALUE;
 		for(Move m: validMoves){
@@ -619,9 +672,90 @@ public class MyAIPlayer implements Player{
 			}
 		}
 		validMoves.remove(worstMove);
-		return validMoves;
+		return validMoves;*/
 	}
 
+	
+	private int simpleDetectiveScore(int location){
+		
+		//getting location
+		Integer mrX = Locations.get(Colour.Black);
+		if(mrX.equals(0)){
+			//System.out.println("mrX=0");
+			return 0;
+		}
+		
+		//getting distance to detectives
+		int totalDistanceToDetectives  = pairBreathfirstNodeSearch(mrX, location, nodes, edges);
+				
+		int positionOnBoard = Math.abs(graphDisplay.getX(location) - 509) + Math.abs(graphDisplay.getY(location) - 404);
+		
+		
+		
+		//Scaling factors
+		int distanceFromDetectivesScale = 100;
+		double positionScale = 0.2;
+				
+		
+		return (distanceFromDetectivesScale*totalDistanceToDetectives + 
+				((int)positionScale*positionOnBoard));
+		
+	}
+	
+	private int  pairBreathfirstNodeSearch(Integer mrX, Integer detect,	Set<Node<Integer>> nodes, List<Edge<Integer, Route>> edges) {
+		
+		if(mrX.equals(detect)){
+			return 0;
+		}
+	
+		List<Edge<Integer, Route>> edges1 = new ArrayList<Edge<Integer, Route>>(edges);
+		Set<Node<Integer>> nodes1 = new HashSet<Node<Integer>>(nodes);
+		
+		for(Edge<Integer, Route> e: edges){
+			if(e.data().equals(Route.Boat)){
+				edges1.remove(e);
+			}
+		}
+		
+		int currentDistance = 0;
+		
+		//Initialise distance to maximum.
+		int distance = Integer.MAX_VALUE;
+		
+		//Start at Mr X location.
+		Set<Node<Integer>> currentNodes =  new HashSet<Node<Integer>>();
+		Node<Integer> detectNode = findNode(detect, nodes1);
+		if(detectNode == null){
+			System.err.println("Mr X not on valid location");
+		}
+		currentNodes.add(detectNode);
+		//Remove visited Nodes.
+		nodes1.remove(detectNode);
+		//while there are detective still to reach.
+		while( distance == Integer.MAX_VALUE){
+			
+			//Get nodes one step away.
+			Set<Node<Integer>> neighbours = getNeighbours(currentNodes, nodes1, edges1);
+			currentDistance++;
+			//Remove seen nodes.
+			nodes1.remove(neighbours);
+			
+			//If they are detective locations update the shortest distance.
+			for(Node<Integer> n: neighbours){
+				if(mrX.equals(n.data())){
+					return currentDistance;
+				}				
+			}
+			
+			currentNodes = neighbours;
+		}
+		
+		//Add the distances to give a score
+		
+		return 0;
+}
+
+	
 	private String printLevel(int l){
 		String s = "";
 		for(int x = 0; x<l;x++){
@@ -635,20 +769,22 @@ public class MyAIPlayer implements Player{
 	
 	@Override
     public Move notify(int location, Set<Move> moves) {
-
+		System.out.println("Current MrX Location: "+location);
+		
 		try {
 			scoreInit(location);
 			Locations.put(Colour.Black, location);
-			Move bestMove = null;
-			time = new Date();
-			init = time.getTime();
+			System.out.println("Trying simple one move ahead");
+			Move bestMove = oneMoveLookAhead(location, moves);
+			init = new Date().getTime();
+			
 			int x = 4;
-			while(time.getTime()-init <10000 && x<6){
-				System.out.println("before try");
+			while(new Date().getTime()-init <13000){
+				System.out.println("Trying using "+x+" depth");
 				try {
 					bestMove = iterativeMinMaxHelper(x);
 				} catch (TimeLimitExceededException e) {
-					System.out.println(x + " failed using "+ (x-1));
+					System.out.println(x + " failed, fall back to "+ (x-1));
 				}
 				x++;
 				//Move bestMove = MinMaxTree();
@@ -704,6 +840,58 @@ public class MyAIPlayer implements Player{
 		return moves.iterator().next();
 		
     }
+
+	private Move oneMoveLookAhead(int location, Set<Move> moves) {
+		int bestScore = Integer.MAX_VALUE;
+		Move bestMove = null;
+		int score = Integer.MAX_VALUE;
+		
+		for(Move move: moves){
+			int newLocation;
+			int ticketScale = 0;
+			
+			Ticket t = Ticket.Taxi; 
+			
+			if(move instanceof MoveTicket){
+				newLocation = ((MoveTicket) move).target;
+				
+				t = ((MoveTicket) move).ticket;
+				if(t.equals(Ticket.Underground)){
+					ticketScale = 300;
+				}else if(t.equals(Ticket.Bus)){
+					ticketScale = 150;
+				}else if(t.equals(Ticket.Taxi)){
+					ticketScale = 100;
+				}
+				
+			}else if(move instanceof MoveDouble){
+				newLocation = ((MoveDouble) move).move2.target;
+			}else if(move instanceof MovePass){
+				return move;
+			}else{
+				throw new Error("Move isn't real");
+			}
+			
+			
+			score = score(model.getLocations(),nodes, edges, 0);
+			
+			
+			
+				
+			
+			if(move instanceof MoveTicket)
+				score = score - (Tickets.get(Colour.Black).get(t)*ticketScale);
+			
+			
+			if(score<=bestScore){
+				bestScore = score;
+				bestMove = move;
+			}
+		
+		}
+		
+		return bestMove;
+	}
 	
 
 }

@@ -26,7 +26,21 @@ public class GuiGame {
     public static void main(String[] args) {
     	
     	locations = new HashSet<Integer>();
-    	
+    	/*
+    	List<Boolean> rounds = Arrays.asList(
+                true,
+                true, true,
+                true,
+                true,true,true,true,
+                true,
+                true,true,true,true,
+                true,
+                true,true,true,true,
+                true,
+                true,true,true,true,true,
+                true);
+    	*/
+        
         List<Boolean> rounds = Arrays.asList(
                 false,
                 false, false,
@@ -39,6 +53,8 @@ public class GuiGame {
                 true,
                 false, false, false, false, false,
                 true);
+              
+         
         String graphFilename     = "resources/graph.txt";
         String positionsFilename = "resources/pos.txt";
         String imageFilename     = "resources/map.jpg";

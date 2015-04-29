@@ -30,6 +30,7 @@ public class AIMrXPlayerFactory implements PlayerFactory {
     protected List<Spectator> spectators;
     AIAssistedGUI gui;
 
+
     public AIMrXPlayerFactory() {
         typeMap = new HashMap<Colour, PlayerType>();
         typeMap.put(Colour.Black, AIMrXPlayerFactory.PlayerType.XAI);
@@ -86,6 +87,7 @@ public class AIMrXPlayerFactory implements PlayerFactory {
     public void finish() {
         if (gui != null) gui.update();
     }
+
 
 
     private AIAssistedGUI gui(ScotlandYardView view) {
