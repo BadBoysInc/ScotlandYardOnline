@@ -456,7 +456,7 @@ public class MyAIPlayer implements Player{
 			System.out.println("Trying simple one move ahead");
 			Move bestMove = oneMoveLookAhead(location, moves);
 			
-			
+			/*
 			int x = 4;
 			while(new Date().getTime()-init <12000){
 				System.out.println("Trying using "+x+" depth");
@@ -467,6 +467,7 @@ public class MyAIPlayer implements Player{
 				}
 				x++;
 			}
+			*/
 			
 			System.out.println("Move Choosen: "+bestMove);
 			
@@ -514,7 +515,7 @@ public class MyAIPlayer implements Player{
 	 * @return best Move according to one look ahead.
 	 */
 	private Move oneMoveLookAhead(int location, Set<Move> moves) {
-		int bestScore = Integer.MAX_VALUE;
+		int bestScore = Integer.MIN_VALUE;
 		Move bestMove = null;
 		int score = Integer.MAX_VALUE;
 		
@@ -550,7 +551,7 @@ public class MyAIPlayer implements Player{
 			if(move instanceof MoveTicket)
 				score = score - (Tickets.get(Colour.Black).get(t)*ticketScale);
 			
-			if(score<=bestScore){
+			if(score>=bestScore){
 				bestScore = score;
 				bestMove = move;
 			}

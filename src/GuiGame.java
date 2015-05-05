@@ -23,7 +23,7 @@ public class GuiGame {
 	
 	static Set<Integer> locations;
 	
-    public static void main(String[] args) {
+    public int run() {
     	
     	locations = new HashSet<Integer>();
     	/*
@@ -97,7 +97,13 @@ public class GuiGame {
 
         if (game.isReady()) factory.ready();
         game.start();
-
+        
+        System.out.println(game.getWinningPlayers());
+        if(game.getWinningPlayers().contains(Colour.Black)){
+        	return 1;
+        }else{
+        	return 0;
+        }
     }
     
     

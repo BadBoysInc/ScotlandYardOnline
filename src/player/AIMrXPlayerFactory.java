@@ -42,7 +42,7 @@ public class AIMrXPlayerFactory implements PlayerFactory {
     public AIMrXPlayerFactory() {
         typeMap = new HashMap<Colour, PlayerType>();
         typeMap.put(Colour.Black, AIMrXPlayerFactory.PlayerType.XAI);
-        typeMap.put(Colour.Blue, AIMrXPlayerFactory.PlayerType.GUI);
+        typeMap.put(Colour.Blue, AIMrXPlayerFactory.PlayerType.SimpAI);
         typeMap.put(Colour.Green, AIMrXPlayerFactory.PlayerType.SimpAI);
         typeMap.put(Colour.Red, AIMrXPlayerFactory.PlayerType.SimpAI);
         typeMap.put(Colour.White, AIMrXPlayerFactory.PlayerType.SimpAI);
@@ -89,7 +89,7 @@ public class AIMrXPlayerFactory implements PlayerFactory {
 	 */
     @Override
     public void ready() {
-        if (gui != null) gui.run();
+        //if (gui != null) gui.run();
     }
     
     /**
@@ -98,7 +98,7 @@ public class AIMrXPlayerFactory implements PlayerFactory {
     @Override
     public List<Spectator> getSpectators(ScotlandYardView view) {
         List<Spectator> specs = new ArrayList<Spectator>();
-        specs.add(gui(view));
+        //specs.add(gui(view));
         return specs;
     }
     
@@ -107,7 +107,7 @@ public class AIMrXPlayerFactory implements PlayerFactory {
      */
     @Override
     public void finish() {
-        if (gui != null) gui.update();
+        //if (gui != null) gui.update();
     }
 
     /**
@@ -117,7 +117,7 @@ public class AIMrXPlayerFactory implements PlayerFactory {
      */
     private AIAssistedGUI gui(ScotlandYardView view) {
         System.out.println("GUI");
-        if (gui == null) {
+       /* if (gui == null) {
 			try {
 				JFrame.setDefaultLookAndFeelDecorated(true);
 				gui = new AIAssistedGUI(view, imageFilename, positionsFilename, makeOverlay());
@@ -126,10 +126,10 @@ public class AIMrXPlayerFactory implements PlayerFactory {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
 			}
-            spectators.add(gui);
+            //spectators.add(gui);
             
             
-		}
+		}*/
         return gui;
     }
 
@@ -139,7 +139,7 @@ public class AIMrXPlayerFactory implements PlayerFactory {
      * @return PossibleMovesOverLay
      */
 	private PossibleMovesOverLay makeOverlay() {
-			
+		
 		GraphicsEnvironment graphicsEnvironment = GraphicsEnvironment.getLocalGraphicsEnvironment();
         GraphicsDevice graphicsDevice = graphicsEnvironment.getDefaultScreenDevice();
 

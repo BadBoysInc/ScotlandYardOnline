@@ -95,7 +95,7 @@ public class AIAssistedGUI extends Gui{
 			}
 			if(mrXMove instanceof MoveDouble && view.getRounds().get(view.getRound()-1)){
 				mrXMove = ((MoveDouble) mrXMove).move2;
-				mrXT1 	= ((MoveDouble) mrXMove).move2.ticket;
+				mrXT1 	= ((MoveTicket) mrXMove).ticket;
 				possibleLocations = new ArrayList<Integer>();
 				possibleLocations.add(view.getPlayerLocation(Colour.Black));
 			}
@@ -112,7 +112,7 @@ public class AIAssistedGUI extends Gui{
 				
 			}
 		}
-		super.notify(move);
+		//super.notify(move);
 	}
 	
 	/**
