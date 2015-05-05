@@ -30,13 +30,13 @@ Server.prototype.start = function(player_port, game_port) {
 	this.game_server.on('initialised', function(incoming_game_id){
 		self.game_id = incoming_game_id;
 	});
-  this.player_server.on('register', function(player){
-    var colour = self.getNextColour();
-    self.game_server.addPlayer(player, colour, self.game_id);
-  });
-  this.player_server.on('move', function(player, obj){
-    self.game_server.makeMove(player, obj); 
-  });
+	this.player_server.on('register', function(player){
+		var colour = self.getNextColour();
+    	self.game_server.addPlayer(player, colour, self.game_id);
+	});
+	this.player_server.on('move', function(player, obj){
+		self.game_server.makeMove(player, obj); 
+	});
 }
 
 

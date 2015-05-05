@@ -1,6 +1,8 @@
 package newgui;
 import gui.Gui;
 
+import java.awt.Dimension;
+import java.awt.Point;
 import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.io.IOException;
@@ -41,7 +43,7 @@ public class AIAssistedGUI extends Gui{
 		super(v, imageFilename, positionsFilename);
 		setDefaultCloseOperation(EXIT_ON_CLOSE);
 		
-		this.addWindowListener(new WindowListener() {
+		super.addWindowListener(new WindowListener() {
 			@Override
 			public void windowClosed(WindowEvent e) {
 				overlay.dispose();
@@ -68,6 +70,7 @@ public class AIAssistedGUI extends Gui{
 		ScotlandYardGraphReader reader 	= new ScotlandYardGraphReader();
 		graph = reader.readGraph("./resources/graph.txt/");
 		edges = new ArrayList<Edge<Integer, Route>>(graph.getEdges());
+		
 	}
 	
 	/**

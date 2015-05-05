@@ -196,6 +196,9 @@ public class MyAIPlayer implements Player{
 	 */
 	int min(int level, Integer bestPreComputedSibling, boolean afterMrX) throws TimeLimitExceededException{
 		
+		//interrupts if the time limit has been reached.
+		checkTime();
+		
 		if(model.isGameOver()){
 			if(model.getWinningPlayers().contains(Colour.Black)){
 				if(Debug.printOutEndGame)System.out.println("Winning model");
@@ -209,8 +212,7 @@ public class MyAIPlayer implements Player{
 		if(level == 0)
 			return ScoreBoard.score(model.getLocations(), nodes, edges, model.validMoves(Colour.Black, false).size());
 		
-		//interrupts if the time limit has been reached.
-		checkTime();
+		
 		
 		EnumMap<Colour, Integer> saveLocations = new EnumMap<Colour, Integer>(model.getLocations());
 		
@@ -354,7 +356,7 @@ public class MyAIPlayer implements Player{
 	 * @throws TimeLimitExceededException
 	 */
 	private void checkTime() throws TimeLimitExceededException {
-		if(new Date().getTime()-init >14000)
+		if(new Date().getTime()-init >12000)
 			throw new TimeLimitExceededException("Time Limit Reached");
 	}
 
