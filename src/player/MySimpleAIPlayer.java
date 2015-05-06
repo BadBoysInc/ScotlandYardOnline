@@ -236,7 +236,7 @@ public class MySimpleAIPlayer implements Player{
 				}else if(move instanceof MoveDouble){
 					newLocation = ((MoveDouble) move).move2.target;
 				}else if(move instanceof MovePass){
-					System.out.println("Move Pass!!!");
+					//System.out.println("Move Pass!!!");
 					return move;
 				}else{
 					throw new Error("Move isn't real");

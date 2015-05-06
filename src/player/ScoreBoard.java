@@ -15,14 +15,15 @@ import scotlandyard.Route;
 
 public class ScoreBoard {
 
-	static int distanceFromDetectivesScale = 3;
-	static int currentOptionsScale = 30;
-	static int minDistanceScale = 6;
-	static int positionScale = 3;
+	public static int distanceFromDetectivesScale = 20;
+	public static int currentOptionsScale = 300;
+	public static int minDistanceScale = 60;
+	public static int positionScale = 30;
 	
 	static GraphDisplay graphDisplay = new GraphDisplay();
 
 	/**
+	 * @param val 
 	 * @param Map of all colour players to their locations,
 	 * @param A Set holding the nodes of the graph,
 	 * @param A list holding the edges of the graph,
@@ -30,8 +31,9 @@ public class ScoreBoard {
 	 * @return Integer score of board, using distance to detectives, position on board and number of possible moves.
 	 */
 
-	public static int score(EnumMap<Colour, Integer> locations, Set<Node<Integer>> nodes, List<Edge<Integer, Route>> edges, int validMoves){
-		
+	public static int score(EnumMap<Colour, Integer> locations, Set<Node<Integer>> nodes, List<Edge<Integer, Route>> edges, int validMoves, int val){
+		positionScale = val;
+		//System.out.println("distanceFromDetectivesScale: "+distanceFromDetectivesScale);
 		//getting location
 		Integer mrX = locations.get(Colour.Black);
 		

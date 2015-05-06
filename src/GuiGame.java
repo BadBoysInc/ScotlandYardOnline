@@ -23,7 +23,7 @@ public class GuiGame {
 	
 	static Set<Integer> locations;
 	
-    public int run() {
+    public int run(int val) {
     	
     	locations = new HashSet<Integer>();
     	/*
@@ -82,7 +82,7 @@ public class GuiGame {
         detectiveXTickets.put(Ticket.Taxi,        11);
 
 
-        PlayerFactory factory = new AIMrXPlayerFactory(typeMap, imageFilename, positionsFilename);
+        PlayerFactory factory = new AIMrXPlayerFactory(typeMap, imageFilename, positionsFilename, val);
         ScotlandYard game = new ScotlandYardModel(5, rounds, graphFilename);
         game.join(factory.player(Colour.Black,  game, graphFilename), Colour.Black, getRandLocation(), mrXTickets);
         game.join(factory.player(Colour.Blue,   game, graphFilename), Colour.Blue, getRandLocation(), new HashMap<Ticket, Integer>(detectiveXTickets));
@@ -98,7 +98,7 @@ public class GuiGame {
         if (game.isReady()) factory.ready();
         game.start();
         
-        System.out.println(game.getWinningPlayers());
+        //System.out.println(game.getWinningPlayers());
         if(game.getWinningPlayers().contains(Colour.Black)){
         	return 1;
         }else{

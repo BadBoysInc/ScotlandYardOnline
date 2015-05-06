@@ -50,12 +50,15 @@ public class MyAIPlayer implements Player{
 	
 	long init;
 	int winningBonus = 1000;
+	int val;
 
 	/**
 	 * @param Shared View
 	 * @param graphFilename
+	 * @param val 
 	 */
-	public MyAIPlayer(ScotlandYardView view, String graphFilename) {
+	public MyAIPlayer(ScotlandYardView view, String graphFilename, int val) {
+		this.val = val;
 		this.view = view;
 		this.graphFilename = graphFilename;
 		
@@ -448,12 +451,12 @@ public class MyAIPlayer implements Player{
 	@Override
     public Move notify(int location, Set<Move> moves) {
 		init = new Date().getTime();
-		System.out.println("Current MrX Location: "+location);
+		//System.out.println("Current MrX Location: "+location);
 		
 		try {
 			setup(location);
 			Locations.put(Colour.Black, location);
-			System.out.println("Trying simple one move ahead");
+			//System.out.println("Trying simple one move ahead");
 			Move bestMove = oneMoveLookAhead(location, moves);
 			
 			/*
@@ -469,7 +472,7 @@ public class MyAIPlayer implements Player{
 			}
 			*/
 			
-			System.out.println("Move Choosen: "+bestMove);
+			//System.out.println("Move Choosen: "+bestMove);
 			
 			if(view.getPlayerLocation(Colour.Black) != 0){
 				
@@ -492,10 +495,10 @@ public class MyAIPlayer implements Player{
 				
 				if(taxi && bus && underground && Tickets.get(Colour.Black).get(Ticket.Secret)>0){
 					if(bestMove instanceof MoveTicket){
-						System.out.println("Move Secrefied");
+						//System.out.println("Move Secrefied");
 						return MoveTicket.instance(Colour.Black, Ticket.Secret, ((MoveTicket) bestMove).target);
 					}else if(bestMove instanceof MoveDouble){
-						System.out.println("Move Secrefied");
+						//System.out.println("Move Secrefied");
 						return MoveDouble.instance(Colour.Black, MoveTicket.instance(Colour.Black, Ticket.Secret, ((MoveDouble) bestMove).move1.target), ((MoveDouble) bestMove).move2);
 					}
 				}
@@ -546,7 +549,7 @@ public class MyAIPlayer implements Player{
 			
 			EnumMap<Colour, Integer> tmp = model.getLocations();
 			tmp.put(move.colour, newLocation);
-			score = ScoreBoard.score(tmp,nodes, edges, 0);
+			score = ScoreBoard.score(tmp,nodes, edges, 0, val);
 			
 			if(move instanceof MoveTicket)
 				score = score - (Tickets.get(Colour.Black).get(t)*ticketScale);

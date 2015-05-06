@@ -33,7 +33,7 @@ public class AIMrXPlayerFactory implements PlayerFactory {
     String positionsFilename;
 
     protected List<Spectator> spectators;
-
+    int val;
 
     AIAssistedGUI gui;
 	/**
@@ -54,12 +54,13 @@ public class AIMrXPlayerFactory implements PlayerFactory {
         spectators = new ArrayList<Spectator>();
     }
 
-    public AIMrXPlayerFactory(Map<Colour, PlayerType> typeMap, String imageFilename, String positionsFilename) {
+    public AIMrXPlayerFactory(Map<Colour, PlayerType> typeMap, String imageFilename, String positionsFilename, int val) {
     	this();
     	//this.typeMap = typeMap;
         this.imageFilename = imageFilename;
         this.positionsFilename = positionsFilename;
         spectators = new ArrayList<Spectator>();
+        this.val = val;
     }
 
     /**
@@ -72,7 +73,7 @@ public class AIMrXPlayerFactory implements PlayerFactory {
     public Player player(Colour colour, ScotlandYardView view, String mapFilename) {
         switch (typeMap.get(colour)) {
             case XAI:
-                return new MyAIPlayer(view, mapFilename);
+                return new MyAIPlayer(view, mapFilename, val);
             case SimpAI:
             	return new MySimpleAIPlayer(view, mapFilename);
             case Random:
