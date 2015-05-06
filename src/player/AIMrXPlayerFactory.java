@@ -1,5 +1,7 @@
 package player;
 
+import gui.Gui;
+
 import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
 import java.io.IOException;
@@ -35,7 +37,7 @@ public class AIMrXPlayerFactory implements PlayerFactory {
     protected List<Spectator> spectators;
 
 
-    AIAssistedGUI gui;
+    Gui gui;
 	/**
 	 * Sets default players and resources.
 	 */
@@ -43,10 +45,10 @@ public class AIMrXPlayerFactory implements PlayerFactory {
         typeMap = new HashMap<Colour, PlayerType>();
         typeMap.put(Colour.Black, AIMrXPlayerFactory.PlayerType.XAI);
         typeMap.put(Colour.Blue, AIMrXPlayerFactory.PlayerType.GUI);
-        typeMap.put(Colour.Green, AIMrXPlayerFactory.PlayerType.SimpAI);
-        typeMap.put(Colour.Red, AIMrXPlayerFactory.PlayerType.SimpAI);
-        typeMap.put(Colour.White, AIMrXPlayerFactory.PlayerType.SimpAI);
-        typeMap.put(Colour.Yellow, AIMrXPlayerFactory.PlayerType.SimpAI);
+        typeMap.put(Colour.Green, AIMrXPlayerFactory.PlayerType.GUI);
+        typeMap.put(Colour.Red, AIMrXPlayerFactory.PlayerType.GUI);
+        typeMap.put(Colour.White, AIMrXPlayerFactory.PlayerType.GUI);
+        typeMap.put(Colour.Yellow, AIMrXPlayerFactory.PlayerType.GUI);
 
         positionsFilename = "resources/pos.txt";
         imageFilename     = "resources/map.jpg";
@@ -55,8 +57,7 @@ public class AIMrXPlayerFactory implements PlayerFactory {
     }
 
     public AIMrXPlayerFactory(Map<Colour, PlayerType> typeMap, String imageFilename, String positionsFilename) {
-    	this();
-    	//this.typeMap = typeMap;
+    	this.typeMap = typeMap;
         this.imageFilename = imageFilename;
         this.positionsFilename = positionsFilename;
         spectators = new ArrayList<Spectator>();
@@ -115,12 +116,13 @@ public class AIMrXPlayerFactory implements PlayerFactory {
      * @param View with data in, common to all players.
      * @return AIAssistedGUI to play moves with
      */
-    private AIAssistedGUI gui(ScotlandYardView view) {
+    private Gui gui(ScotlandYardView view) {
         System.out.println("GUI");
         if (gui == null) {
 			try {
-				JFrame.setDefaultLookAndFeelDecorated(true);
-				gui = new AIAssistedGUI(view, imageFilename, positionsFilename, makeOverlay());
+				//JFrame.setDefaultLookAndFeelDecorated(true);
+				//gui = new AIAssistedGUI(view, imageFilename, positionsFilename, makeOverlay());
+				gui = new Gui(view, imageFilename, positionsFilename);
 				
 			} catch (IOException e) {
 				// TODO Auto-generated catch block

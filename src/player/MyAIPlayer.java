@@ -49,7 +49,7 @@ public class MyAIPlayer implements Player{
 	Set<Node<Integer>> nodes;
 	
 	long init;
-	int winningBonus = 1000;
+	int winningBonus = 10000;
 
 	/**
 	 * @param Shared View
@@ -127,14 +127,17 @@ public class MyAIPlayer implements Player{
 	 * @return The best move to take
 	 * @throws TimeLimitExceededException if 14 seconds has elapsed
 	 */
-	Move minMaxHelper(int x) throws TimeLimitExceededException{
+	Move minMaxHelper(int x, int location) throws TimeLimitExceededException{
 		
 		HashMap<Move, Integer> MrXMoves = new HashMap<Move, Integer>();
 		
 		int savedRound = view.getRound();
 		
-		if(x>4)
-			model.setData(Tickets, Locations, Colour.Black, savedRound);
+		model.setData(Tickets, Locations, Colour.Black, savedRound);
+		
+		
+		System.out.println("Current MrX Location: "+location+" vs "+Locations.get(Colour.Black));
+
 		
 		Map<Integer, Integer> dists = ScoreBoard.breathfirstNodeSearch(Locations.get(Colour.Black), ScoreBoard.getDetectivePositions(Locations), nodes, edges);
 		
@@ -150,6 +153,7 @@ public class MyAIPlayer implements Player{
 		}else{
 			singlemoves = model.validMoves(Colour.Black, false);
 		}
+		System.out.println(singlemoves);
 
 		Integer bestChildScore = Integer.MIN_VALUE;
 
@@ -180,7 +184,7 @@ public class MyAIPlayer implements Player{
 		
 		if(bestScore == Integer.MIN_VALUE && singleMovesAllFail == false){
 			singleMovesAllFail = true;
-			return minMaxHelper(x);
+			return minMaxHelper(x, location);
 		}
 		
 		return bestMove;
@@ -454,16 +458,18 @@ public class MyAIPlayer implements Player{
 			setup(location);
 			Locations.put(Colour.Black, location);
 			System.out.println("Trying simple one move ahead");
-			Move bestMove = oneMoveLookAhead(location, moves);
+			Move bestMove = oneMoveLookAhead(moves);
 			
 			
 			int x = 4;
 			while(new Date().getTime()-init <12000){
 				System.out.println("Trying using "+x+" depth");
 				try {
-					bestMove = minMaxHelper(x);
+					bestMove = minMaxHelper(x, location);
 				} catch (TimeLimitExceededException e) {
 					System.out.println(x + " failed, fall back to "+ (x-1));
+				} catch (Exception e){
+					
 				}
 				x++;
 			}
@@ -513,8 +519,8 @@ public class MyAIPlayer implements Player{
 	 * @param Valid moves
 	 * @return best Move according to one look ahead.
 	 */
-	private Move oneMoveLookAhead(int location, Set<Move> moves) {
-		int bestScore = Integer.MAX_VALUE;
+	private Move oneMoveLookAhead(Set<Move> moves) {
+		int bestScore = Integer.MIN_VALUE;
 		Move bestMove = null;
 		int score = Integer.MAX_VALUE;
 		
@@ -550,7 +556,7 @@ public class MyAIPlayer implements Player{
 			if(move instanceof MoveTicket)
 				score = score - (Tickets.get(Colour.Black).get(t)*ticketScale);
 			
-			if(score<=bestScore){
+			if(score>=bestScore){
 				bestScore = score;
 				bestMove = move;
 			}

@@ -10,6 +10,8 @@ import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.List;
 import java.util.Set;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import javax.swing.SwingUtilities;
 
@@ -38,6 +40,8 @@ public class AIAssistedGUI extends Gui{
 	Ticket mrXT1;
 	Ticket mrXT2;
 	PossibleMovesOverLay overlay;
+	int currentTime = 0;
+	Timer t;
 	
 	public AIAssistedGUI(ScotlandYardView v, String imageFilename, String positionsFilename, PossibleMovesOverLay overlay) throws IOException {
 		super(v, imageFilename, positionsFilename);
@@ -70,6 +74,7 @@ public class AIAssistedGUI extends Gui{
 		ScotlandYardGraphReader reader 	= new ScotlandYardGraphReader();
 		graph = reader.readGraph("./resources/graph.txt/");
 		edges = new ArrayList<Edge<Integer, Route>>(graph.getEdges());
+		t = new Timer();
 		
 	}
 	
@@ -77,7 +82,37 @@ public class AIAssistedGUI extends Gui{
 	 * Called to ask for detective move to make.
 	 */
 	public Move notify(int location, Set<Move> moves){
-		consoleAssist(moves);
+		currentTime = 0;
+		t = new Timer();
+		t.scheduleAtFixedRate(new TimerTask(){
+			@Override
+			public void run() {
+				
+				System.out.println(currentTime);
+				currentTime++;
+			}
+		}, 0, 1000);
+		
+		t.schedule(new TimerTask(){
+
+			@Override
+			public void run() {
+				t.cancel();
+			}
+			
+		}, 15000);
+		
+		System.out.println("Gui got move");
+		SwingUtilities.invokeLater(new Runnable(){
+
+			@Override
+			public void run() {
+				consoleAssist(moves);
+			}
+			
+		});
+		
+		System.out.println("getting from their interface");
 		return super.notify(location, moves);
 	}
 	
@@ -85,6 +120,7 @@ public class AIAssistedGUI extends Gui{
 	 * Called as spectator whenever a move is made.
 	 */
 	public void notify(Move move){
+		t.cancel();
 		if(move.colour.equals(Colour.Black) && view.getPlayerLocation(Colour.Black) != 0){
 			mrXMove = move;
 			if(move instanceof MoveTicket){

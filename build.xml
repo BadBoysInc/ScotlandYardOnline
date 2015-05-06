@@ -59,6 +59,28 @@
         </java>
     </target>
 
+    <target name="mrx" depends="jar">
+        <java fork="true" classname="${players_main}">
+            <arg line="localhost 8122 black" />
+            <classpath>
+                <pathelement location="${classes.dir}" />
+                <path location="${jar.dir}/${ant.project.name}.jar" />
+                <path refid="tests_classpath" />
+            </classpath>
+        </java>
+    </target>
+
+    <target name="detectives" depends="jar">
+        <java fork="true" classname="${players_main}">
+            <arg line="localhost 8122 blue green red white" />
+            <classpath>
+                <pathelement location="${classes.dir}" />
+                <path location="${jar.dir}/${ant.project.name}.jar" />
+                <path refid="tests_classpath" />
+            </classpath>
+        </java>
+    </target>
+
     <target name="players" depends="jar">
         <java fork="true" classname="${players_main}">
             <arg line="localhost 8122 ab1234 cd5678 ef4321 gh6543 ab1234 cd5678" />
